@@ -987,13 +987,13 @@ body.has-stickybar { padding-bottom: 88px; }
 }
 
 /* фотополоса под заголовком первого экрана */
-.hero__band {
-  margin-top: 24px;
+.hero__band { margin-top: 24px; }
+.hero__band picture {
+  display: block;
   border-radius: var(--r-block);
   overflow: hidden;
   background: var(--sand);
 }
-.hero__band picture { display: block; }
 .hero__band img {
   width: 100%;
   height: auto;
@@ -1004,8 +1004,7 @@ body.has-stickybar { padding-bottom: 88px; }
 }
 
 @media (min-width: 768px) {
-  .hero__band picture { display: block; }
-.hero__band img { aspect-ratio: 10 / 3; object-position: center; }
+  .hero__band img { aspect-ratio: 10 / 3; object-position: center; }
 }
 .hero__grid--solo .hero__col { width: 100%; max-width: 100%; }
 
@@ -1015,13 +1014,13 @@ body.has-stickybar { padding-bottom: 88px; }
 }
 
 /* фотополоса на странице тура */
-.tour__band {
-  margin-top: 28px;
+.tour__band { margin-top: 28px; }
+.tour__band picture {
+  display: block;
   border-radius: var(--r-block);
   overflow: hidden;
   background: var(--sand);
 }
-.tour__band picture { display: block; }
 .tour__band img {
   width: 100%;
   height: auto;
@@ -1032,3 +1031,14 @@ body.has-stickybar { padding-bottom: 88px; }
 @media (min-width: 768px) {
   .tour__band img { aspect-ratio: 21 / 9; }
 }
+
+/* подпись под фотографией: автор и лицензия */
+.shot { margin: 0; }
+.credit {
+  padding: 8px 2px 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted-3);
+}
+.credit a { color: var(--muted-2); text-decoration: underline; }
+.credit a:hover { color: var(--ink); }

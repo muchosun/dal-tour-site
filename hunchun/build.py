@@ -44,6 +44,36 @@ FAVICON = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox
            " text-anchor='middle'%3E%D0%94%3C/text%3E%3C/svg%3E")
 
 
+# Временные фотографии с Викисклада. CC BY-SA требует указать автора,
+# лицензию и то, что кадр изменён. Заменяются, как только заказчик пришлёт свои.
+CREDITS = {
+    "hero": {
+        "alt": "Торговая улица в Хуньчуне с вывеской «Торговый центр»",
+        "author": "Baycrest",
+        "lic": "CC BY-SA 2.5",
+        "lic_url": "https://creativecommons.org/licenses/by-sa/2.5/deed.ru",
+        "src": "https://commons.wikimedia.org/wiki/File:Hunchun_Yanhe_Xijie.jpg",
+    },
+    "tour": {
+        "alt": "Международный автовокзал Хуньчуня",
+        "author": "xue siyang",
+        "lic": "CC BY-SA 3.0",
+        "lic_url": "https://creativecommons.org/licenses/by-sa/3.0/deed.ru",
+        "src": "https://commons.wikimedia.org/wiki/File:%E5%B7%A1%E9%81%93%E5%B7%A5%E5%87%BA%E5%93%81_photo_by_Xundaogong_%E7%8F%B2%E6%98%A5%E5%9B%BD%E9%99%85%E5%85%AC%E8%B7%AF%E5%AE%A2%E8%BF%90%E7%AB%99_-_panoramio.jpg",
+    },
+}
+
+
+def credit_line(name: str) -> str:
+    c = CREDITS.get(name)
+    if not c:
+        return ""
+    return (f'<figcaption class="credit">Фото: '
+            f'<a href="{c["src"]}" target="_blank" rel="noopener nofollow">{c["author"]}</a>, '
+            f'<a href="{c["lic_url"]}" target="_blank" rel="noopener nofollow">{c["lic"]}</a>, '
+            f'кадрировано</figcaption>')
+
+
 IMG_DIR = os.path.join(HERE, "assets", "img")
 
 
@@ -59,9 +89,9 @@ def picture(name: str, alt: str, cls: str, eager: bool = False,
     loading = 'loading="eager" fetchpriority="high"' if eager else 'loading="lazy"'
     webp = (f'<source srcset="assets/img/{name}.webp" type="image/webp">'
             if has_img(name + ".webp") else "")
-    return (f'<picture class="{cls}">{webp}'
+    return (f'<figure class="shot {cls}"><picture>{webp}'
             f'<img src="assets/img/{name}.jpg" alt="{alt}" {loading} decoding="async"'
-            f' width="{w}" height="{h}"></picture>')
+            f' width="{w}" height="{h}"></picture>{credit_line(name)}</figure>')
 
 
 def wa(text: str) -> str:
@@ -266,8 +296,7 @@ def build_index() -> str:
 
     wa_href = wa(f"Здравствуйте! Подскажите по турам в {CITY['name']}.")
 
-    shot = picture("hero", f"Автобус на отправлении в {CITY['name']} из {CITY['from'][:-1]}а",
-                   "hero__shot", eager=True)
+    shot = picture("hero", CREDITS["hero"]["alt"], "hero__shot", eager=True, w=1600, h=800)
     hero_art = ("" if shot else
                 f'<div class="hero__art">'
                 f'<b lang="zh" style="font-family:var(--display);font-size:44px;'
@@ -364,7 +393,7 @@ def build_tour(d: int, n: int) -> str:
     wa_href = wa(f"Здравствуйте! Интересует тур в {CITY['name']} на {lbl}. "
                  f"Подскажите ближайшие даты и стоимость.")
 
-    shot = picture("tour", f"{CITY['name']}, фотография из тура", "", w=1600, h=900)
+    shot = picture("tour", CREDITS["tour"]["alt"], "", w=1600, h=900)
     tour_band = f'<div class="wrap"><div class="tour__band">{shot}</div></div>' if shot else ""
 
     # программа по дням: каркас, тексты заказчик присылает отдельно
