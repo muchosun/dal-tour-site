@@ -1042,3 +1042,106 @@ body.has-stickybar { padding-bottom: 88px; }
 }
 .credit a { color: var(--muted-2); text-decoration: underline; }
 .credit a:hover { color: var(--ink); }
+
+/* ================= правки по обратной связи 25.09 ================= */
+
+/* A3–A5: первый экран без кнопок, фактов и фото */
+.hero--lean { padding-top: 28px; padding-bottom: 8px; }
+.hero--lean h1 { font-size: 30px; line-height: 1.1; text-wrap: balance; }
+.hero--lean .hero__lead { margin-top: 14px; max-width: 620px; }
+
+/* A6: каталог сразу под заголовком */
+.section--tight { padding-top: 20px; }
+
+/* D2: два факта без заголовка «Почему ДАЛЬТУР» */
+.marks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+.mark svg { flex: none; }
+
+/* C1–C3, D4: единый блок контактов */
+.contacts {
+  padding: 22px 20px;
+  background: var(--ink);
+  border-radius: var(--r-block);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.contacts__text b {
+  display: block;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 1.25;
+  color: #fff;
+}
+.contacts__text span {
+  display: block;
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--dark-text);
+}
+.contacts__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.contacts__actions .btn { flex: 1 1 auto; }
+.contacts__actions .btn--ghost {
+  background: transparent;
+  color: #fff;
+  border-color: #4A443C;
+}
+.contacts__actions .btn--ghost:hover { border-color: #fff; color: #fff; }
+.btn--tel { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* F3: два факта вместо четырёх */
+.facts--pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* G1: день подписан словом */
+.day__head { flex-direction: column; align-items: flex-start; gap: 4px; }
+.day__ord {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--red-deep);
+}
+
+/* H1: заглушка плеера */
+.video__play { color: #B9A88C; line-height: 0; }
+.video__frame b { margin-top: 4px; }
+
+@media (min-width: 768px) {
+  .hero--lean { padding-top: 48px; }
+  .hero--lean h1 { font-size: 40px; }
+  .marks { flex-direction: row; gap: 32px; }
+  .contacts {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 32px;
+    gap: 32px;
+  }
+  .contacts__text { flex: 1 1 auto; }
+  .contacts__text b { font-size: 22px; }
+  .contacts__actions { flex: 0 0 auto; flex-wrap: nowrap; }
+  .contacts__actions .btn { flex: 0 0 auto; }
+  .facts--pair { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 640px; }
+}
+
+@media (min-width: 1100px) {
+  .hero--lean { padding-top: 64px; padding-bottom: 0; }
+  .hero--lean h1 { font-size: 50px; line-height: 1.06; }
+  .hero--lean .hero__lead { font-size: 18px; }
+  .section--tight { padding-top: 32px; }
+  .mark { font-size: 17px; }
+}

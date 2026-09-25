@@ -3,7 +3,10 @@
 
 Собирает index.html и по странице на каждую длительность тура.
 Запуск:  python3 build.py
-Тот же скрипт переиспользуется под Яньцзи — менять только блок CITY.
+Тот же скрипт переиспользуется под Яньцзи — менять блок CITY и TRANSPORT.
+
+Требования — в PRD.md. В комментариях ниже проставлены id требований,
+чтобы было видно, что чем закрыто.
 """
 import os
 from urllib.parse import quote
@@ -17,12 +20,16 @@ CITY = {
     "name_pre": "Хуньчуне",       # предложный падеж
     "hiero": "珲春",
     "from": "Владивостока",
-    "lead": "Ближайший к Владивостоку город Китая. Выезд автобусом, "
-            "выезды ежедневно. Туры от 2 до 10 дней.",
+    "from_gen": "Владивосток",    # именительный, для строк «Владивосток — Хуньчунь»
+    "lead": "Ближайший к Владивостоку город Китая. Выезды ежедневно, "
+            "туры от 3 до 10 дней.",
 }
 
-# длительности: (дней, ночей)
-TOURS = [(n, n - 1) for n in range(2, 11)]
+# Тег транспорта. Для Яньцзи будет «АВТОБУС + ПОЕЗД» — F7.
+TRANSPORT = "АВТОБУС"
+
+# B1, B2: тура на 2 дня не существует, минимум — 3 дня / 2 ночи.
+TOURS = [(n, n - 1) for n in range(3, 11)]
 
 # ---------------------------------------------------------------- контакты
 
@@ -31,7 +38,7 @@ PHONE_MAIN_TEL = "+79644444144"
 PHONES_EXTRA = [("+7 (423) 248-48-92", "+74232484892"),
                 ("+7 (423) 248-48-91", "+74232484891")]
 WA_NUMBER = "79644444144"
-TG_LINK = "https://t.me/daltour"          # [УТОЧНИТЬ] реальная ссылка
+TG_LINK = "https://t.me/daltour"          # C4: ждём реальную ссылку от заказчика
 SOCIALS = [("VK", "https://vk.com/daltour"),
            ("YouTube", "https://youtube.com/daltour"),
            ("Дзен", "https://dzen.ru/daltour")]
@@ -43,9 +50,9 @@ FAVICON = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox
            " font-family='sans-serif' font-size='17' font-weight='700' fill='white'"
            " text-anchor='middle'%3E%D0%94%3C/text%3E%3C/svg%3E")
 
-
-# Временные фотографии с Викисклада. CC BY-SA требует указать автора,
-# лицензию и то, что кадр изменён. Заменяются, как только заказчик пришлёт свои.
+# A5, I3: фотографий на сайте сейчас нет — на первом экране их убрали,
+# в карточках туров их место занимают видео. Хелперы picture() и CREDITS
+# оставлены: вернуть снимок = снова вызвать picture() в нужном месте.
 CREDITS = {
     "hero": {
         "alt": "Торговая улица в Хуньчуне с вывеской «Торговый центр»",
@@ -54,14 +61,9 @@ CREDITS = {
         "lic_url": "https://creativecommons.org/licenses/by-sa/2.5/deed.ru",
         "src": "https://commons.wikimedia.org/wiki/File:Hunchun_Yanhe_Xijie.jpg",
     },
-    "tour": {
-        "alt": "Международный автовокзал Хуньчуня",
-        "author": "xue siyang",
-        "lic": "CC BY-SA 3.0",
-        "lic_url": "https://creativecommons.org/licenses/by-sa/3.0/deed.ru",
-        "src": "https://commons.wikimedia.org/wiki/File:%E5%B7%A1%E9%81%93%E5%B7%A5%E5%87%BA%E5%93%81_photo_by_Xundaogong_%E7%8F%B2%E6%98%A5%E5%9B%BD%E9%99%85%E5%85%AC%E8%B7%AF%E5%AE%A2%E8%BF%90%E7%AB%99_-_panoramio.jpg",
-    },
 }
+
+IMG_DIR = os.path.join(HERE, "assets", "img")
 
 
 def credit_line(name: str) -> str:
@@ -72,9 +74,6 @@ def credit_line(name: str) -> str:
             f'<a href="{c["src"]}" target="_blank" rel="noopener nofollow">{c["author"]}</a>, '
             f'<a href="{c["lic_url"]}" target="_blank" rel="noopener nofollow">{c["lic"]}</a>, '
             f'кадрировано</figcaption>')
-
-
-IMG_DIR = os.path.join(HERE, "assets", "img")
 
 
 def has_img(name: str) -> bool:
@@ -123,6 +122,11 @@ def slug(d: int) -> str:
     return f"tur-{d}-{'dnya' if d < 5 else 'dney'}.html"
 
 
+# G1: дни подписываем словами — «люди не понимают один, два, три»
+ORDINALS = ["", "Первый", "Второй", "Третий", "Четвёртый", "Пятый",
+            "Шестой", "Седьмой", "Восьмой", "Девятый", "Десятый"]
+
+
 # ---------------------------------------------------------------- иконки
 
 IC_WA = ('<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">'
@@ -138,9 +142,36 @@ IC_PHONE = ('<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hi
 IC_ARROW = ('<svg width="14" height="12" viewBox="0 0 14 12" fill="none" aria-hidden="true">'
             '<path d="M1 6h11M8 2l4 4-4 4" stroke="currentColor" stroke-width="1.6"'
             ' stroke-linecap="round" stroke-linejoin="round"/></svg>')
+IC_PLAY = ('<svg width="34" height="34" viewBox="0 0 34 34" fill="none" aria-hidden="true">'
+           '<circle cx="17" cy="17" r="16" stroke="currentColor" stroke-width="1.6"/>'
+           '<path d="M14 11.5l9 5.5-9 5.5z" fill="currentColor"/></svg>')
 
 
-# ---------------------------------------------------------------- куски страниц
+# ---------------------------------------------------------------- общие блоки
+
+def contacts(title: str, note: str, wa_text: str, anchor: str = "") -> str:
+    """C1–C3, D4: WhatsApp → Telegram → трубка. Одинаково на всех страницах."""
+    ident = f' id="{anchor}"' if anchor else ""
+    return f"""
+  <section class="section"{ident}>
+    <div class="wrap">
+      <div class="contacts">
+        <div class="contacts__text">
+          <b>{title}</b>
+          <span>{note}</span>
+        </div>
+        <div class="contacts__actions">
+          <a class="btn btn--primary" href="{wa(wa_text)}" target="_blank" rel="noopener">{IC_WA} Спросить в WhatsApp</a>
+          <a class="btn btn--ghost" href="{TG_LINK}" target="_blank" rel="noopener">{IC_TG} Спросить в Telegram</a>
+          <a class="btn btn--ghost btn--tel" href="tel:{PHONE_MAIN_TEL}">{IC_PHONE} {PHONE_MAIN_HUMAN}</a>
+        </div>
+      </div>
+    </div>
+  </section>
+"""
+
+
+# ---------------------------------------------------------------- каркас
 
 def head(title: str, desc: str, base: str = "", sticky: bool = False) -> str:
     return f"""<!doctype html>
@@ -235,6 +266,7 @@ def footer(base: str = "", tail: str = "") -> str:
     tours_links = "\n".join(
         f'          <li><a href="{base}{slug(d)}">{label(d, n)}</a></li>'
         for d, n in TOURS)
+    # C5: городские номера внизу
     phones = "\n".join(f'          <a href="tel:{t}">{h}</a>' for h, t in PHONES_EXTRA)
     socials = "\n".join(
         f'          <a href="{u}" aria-label="{n}">{n[:2].upper() if n != "Дзен" else "Дзен"}</a>'
@@ -268,8 +300,8 @@ def footer(base: str = "", tail: str = "") -> str:
 
     <p class="footer__legal">
       Информация на сайте носит информационный характер и не является публичной офертой (ст. 437 ГК РФ).
-      Стоимость тура зависит от дат выезда и категории отеля — уточняйте у менеджера по телефону
-      {PHONE_MAIN_HUMAN} или в WhatsApp.
+      Стоимость тура зависит от дат выезда, категории отеля и количества дней — уточняйте у менеджера
+      по телефону {PHONE_MAIN_HUMAN} или в WhatsApp.
       <br>© <span data-year>2026</span> ДАЛЬТУР.
     </p>
   </div>
@@ -284,76 +316,54 @@ def footer(base: str = "", tail: str = "") -> str:
 # ---------------------------------------------------------------- главная
 
 def build_index() -> str:
-    cards = []
-    for d, n in TOURS:
-        cards.append(f"""        <a class="duration" href="{slug(d)}">
+    cards = "\n".join(f"""        <a class="duration" href="{slug(d)}">
           <span class="duration__n">
             <span class="duration__days">{d} {days_word(d)}</span>
             <span class="duration__nights">{n} {nights_word(n)}</span>
           </span>
           <span class="duration__go">Программа {IC_ARROW}</span>
-        </a>""")
+        </a>""" for d, n in TOURS)
 
-    wa_href = wa(f"Здравствуйте! Подскажите по турам в {CITY['name']}.")
-
-    shot = picture("hero", CREDITS["hero"]["alt"], "hero__shot", eager=True, w=1600, h=800)
-    hero_art = ("" if shot else
-                f'<div class="hero__art">'
-                f'<b lang="zh" style="font-family:var(--display);font-size:44px;'
-                f'color:#CDBFAC;line-height:1">{CITY["hiero"]}</b>'
-                f'<span>Здесь будет фотография города</span></div>')
-    hero_band = f'<div class="wrap"><div class="hero__band">{shot}</div></div>' if shot else ""
+    first, last = TOURS[0][0], TOURS[-1][0]
 
     return (head(
         f"Туры в {CITY['name']} из {CITY['from']} — ДАЛЬТУР",
-        f"Туры в {CITY['name']} из {CITY['from']} от 2 до 10 дней. Программа по дням, "
-        f"выезды ежедневно. Звоните {PHONE_MAIN_HUMAN} или пишите в WhatsApp.")
+        f"Туры в {CITY['name']} из {CITY['from']} от {first} до {last} дней. "
+        f"Программа по дням, выезды ежедневно. "
+        f"Звоните {PHONE_MAIN_HUMAN} или пишите в WhatsApp.")
         + header() + f"""
 <main id="main">
 
-  <section class="hero">
-    <div class="wrap hero__grid{' hero__grid--solo' if not hero_art else ''}">
-      <div class="hero__col">
-        <span class="hero__eyebrow">ТУРОПЕРАТОР ДАЛЬТУР · {CITY['from'].upper()}</span>
-        <h1>Туры в {CITY['name']} <br class="br-desktop">из {CITY['from']}</h1>
-        <p class="hero__lead">{CITY['lead']}</p>
-
-        <div class="hero__actions">
-          <a class="btn btn--primary" href="tel:{PHONE_MAIN_TEL}">{IC_PHONE} {PHONE_MAIN_HUMAN}</a>
-          <a class="btn btn--ghost" href="{wa_href}" target="_blank" rel="noopener">{IC_WA} Написать в WhatsApp</a>
-        </div>
-
-        <div class="hero__facts">
-          <span class="hero__fact">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7.5" stroke="#A7211A" stroke-width="1.4"/><path d="M10 6v4.3l2.8 1.7" stroke="#A7211A" stroke-width="1.4" stroke-linecap="round"/></svg>
-            <span>Выезды ежедневно</span>
-          </span>
-          <span class="hero__fact">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="7" r="3" stroke="#A7211A" stroke-width="1.4"/><path d="M4 17c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="#A7211A" stroke-width="1.4" stroke-linecap="round"/></svg>
-            <span>Гиды-переводчики в Китае</span>
-          </span>
-          <span class="hero__fact">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 18s6-5.4 6-9.4a6 6 0 1 0-12 0c0 4 6 9.4 6 9.4z" stroke="#A7211A" stroke-width="1.4" stroke-linejoin="round"/><circle cx="10" cy="8.4" r="2.1" stroke="#A7211A" stroke-width="1.4"/></svg>
-            <span>Офис во {CITY['from'][:-1]}е</span>
-          </span>
-        </div>
-      </div>
-
-      {hero_art}
+  <!-- A1: без слова «туроператор». A3–A5: ни кнопок, ни фактов, ни фото. -->
+  <section class="hero hero--lean">
+    <div class="wrap">
+      <h1>Туры в {CITY['name']} <br class="br-desktop">из {CITY['from']}</h1>
+      <p class="hero__lead">{CITY['lead']}</p>
     </div>
-    {hero_band}
   </section>
 
-  <section class="section" id="tury">
+  <!-- A6, B3: каталог сразу под заголовком -->
+  <section class="section section--tight" id="tury">
     <div class="wrap">
-      <div class="section__head">
-        <h2>Выберите длительность</h2>
-        <span class="section__note">от 2 до 10 дней · программа по дням внутри</span>
-      </div>
-
       <div class="durations">
-{chr(10).join(cards)}
+{cards}
       </div>
+    </div>
+  </section>
+
+  <!-- D1, D2: без заголовка «Почему ДАЛЬТУР», только два факта -->
+  <section class="section">
+    <div class="wrap">
+      <ul class="marks">
+        <li class="mark">
+          <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="7" r="3" stroke="#A7211A" stroke-width="1.4"/><path d="M4 17c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="#A7211A" stroke-width="1.4" stroke-linecap="round"/></svg>
+          Гиды-переводчики
+        </li>
+        <li class="mark">
+          <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7.5" stroke="#A7211A" stroke-width="1.4"/><path d="M10 6v4.3l2.8 1.7" stroke="#A7211A" stroke-width="1.4" stroke-linecap="round"/></svg>
+          Выезды ежедневно
+        </li>
+      </ul>
     </div>
   </section>
 
@@ -366,22 +376,14 @@ def build_index() -> str:
       </p>
     </div>
   </section>
-
-  <section class="section">
-    <div class="wrap">
-      <div class="cta">
-        <div>
-          <b>Цену уточняйте у менеджера</b>
-          <span>Стоимость зависит от дат выезда и категории отеля — в праздники дороже. Позвоните или напишите, посчитаем на ваши даты.</span>
-        </div>
-        <div class="cta__actions">
-          <a class="btn btn--ghost" href="tel:{PHONE_MAIN_TEL}">{PHONE_MAIN_HUMAN}</a>
-          <a class="btn btn--primary" href="{wa_href}" target="_blank" rel="noopener">Написать в WhatsApp</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
+"""
+        # D4, D6: «рады проконсультировать», без оговорки про праздники (D5)
+        + contacts(
+            "Всегда рады вас проконсультировать в WhatsApp",
+            "Стоимость зависит от дат выезда, категории отеля и количества дней. "
+            "Позвоните или напишите — посчитаем на ваши даты.",
+            f"Здравствуйте! Подскажите по турам в {CITY['name']}.")
+        + """
 </main>
 """ + footer())
 
@@ -390,47 +392,44 @@ def build_index() -> str:
 
 def build_tour(d: int, n: int) -> str:
     lbl = label(d, n)
-    wa_href = wa(f"Здравствуйте! Интересует тур в {CITY['name']} на {lbl}. "
-                 f"Подскажите ближайшие даты и стоимость.")
+    wa_text = (f"Здравствуйте! Интересует тур в {CITY['name']} на {lbl}. "
+               f"Подскажите ближайшие даты и стоимость.")
 
-    shot = picture("tour", CREDITS["tour"]["alt"], "", w=1600, h=900)
-    tour_band = f'<div class="wrap"><div class="tour__band">{shot}</div></div>' if shot else ""
-
-    # программа по дням: каркас, тексты заказчик присылает отдельно
+    # G1, G2: «Первый день» вместо цифры
     days = []
     for i in range(1, d + 1):
         if i == 1:
-            title = f"{CITY['from'][:-1]} — {CITY['name']}"
-            body = ("[ДЕНЬ 1 — выезд из Владивостока, пункт пропуска, прибытие в "
+            title = f"{CITY['from_gen']} — {CITY['name']}"
+            body = ("[ВЫЕЗД из Владивостока, пункт пропуска, прибытие в "
                     f"{CITY['name_pre']}, размещение в отеле. Текст пришлёт заказчик.]")
         elif i == d:
-            title = f"{CITY['name']} — {CITY['from'][:-1]}"
-            body = ("[ПОСЛЕДНИЙ ДЕНЬ — освобождение номеров, выезд, прибытие во "
-                    "Владивосток. Текст пришлёт заказчик.]")
+            title = f"{CITY['name']} — {CITY['from_gen']}"
+            body = ("[ОСВОБОЖДЕНИЕ НОМЕРОВ, выезд, прибытие во Владивосток. "
+                    "Текст пришлёт заказчик.]")
         else:
             title = CITY["name"]
-            body = f"[ДЕНЬ {i} — программа и экскурсии. Текст пришлёт заказчик.]"
+            body = "[ПРОГРАММА ДНЯ и экскурсии. Текст пришлёт заказчик.]"
         days.append(f"""        <article class="day">
           <div class="day__head">
-            <span class="day__num" aria-hidden="true">{i}</span>
+            <span class="day__ord">{ORDINALS[i]} день</span>
             <h3 class="day__title">{title}</h3>
           </div>
           <p>{body}</p>
         </article>""")
 
-    # перелинковка на остальные длительности
+    # H1–H3: 4 слота под видео с Яндекса, подпись — название экскурсии
+    videos = "\n".join(f"""        <div class="video">
+          <div class="video__frame">
+            <span class="video__play">{IC_PLAY}</span>
+            <b>[ВИДЕО {v}]</b>
+            <span>Ссылку на Яндекс.Видео пришлёт заказчик</span>
+          </div>
+          <div class="video__cap">[НАЗВАНИЕ ЭКСКУРСИИ: аквапарк, зоопарк, чайная церемония]</div>
+        </div>""" for v in (1, 2, 3, 4))
+
     others = "\n".join(
         f'        <a class="pill" href="{slug(od)}">{label(od, on)}</a>'
         for od, on in TOURS if od != d)
-
-    # блоки под видео
-    videos = "\n".join(f"""        <div class="video">
-          <div class="video__frame">
-            <b>[ВИДЕО ЭКСКУРСИИ {v}]</b>
-            <span>Плеер Яндекс.Видео — вставить iframe, когда заказчик пришлёт ссылку</span>
-          </div>
-          <div class="video__cap">[НАЗВАНИЕ ЭКСКУРСИИ {v}]</div>
-        </div>""" for v in (1, 2))
 
     return (head(
         f"Тур в {CITY['name']} {lbl} из {CITY['from']} — ДАЛЬТУР",
@@ -452,32 +451,20 @@ def build_tour(d: int, n: int) -> str:
         <span class="tour-head__hiero" lang="zh" aria-hidden="true">{CITY['hiero']}</span>
       </div>
 
+      <!-- F6: тег транспорта оставляем, заказчику понравился -->
       <div class="tour-head__tags">
-        <span class="tag tag--jade">АВТОБУС</span>
+        <span class="tag tag--jade">{TRANSPORT}</span>
         <span class="tag tag--sand">ВЫЕЗДЫ ЕЖЕДНЕВНО</span>
       </div>
 
-      <dl class="facts">
+      <!-- F1, F2: без «Дороги» и «Времени выезда». F3: только длительность и питание. -->
+      <dl class="facts facts--pair">
         <div class="fact"><dt>Длительность</dt><dd>{lbl}</dd></div>
-        <div class="fact"><dt>Отправление</dt><dd>[ВРЕМЯ ВЫЕЗДА]</dd></div>
-        <div class="fact"><dt>Дорога</dt><dd>[АВТОБУС, ~N ЧАСОВ]</dd></div>
-        <div class="fact"><dt>Питание</dt><dd>[ЗАВТРАКИ?]</dd></div>
+        <div class="fact"><dt>Питание</dt><dd>Завтраки</dd></div>
       </dl>
-
-      <div class="askprice">
-        <span>
-          <b>Цена зависит от дат выезда</b>
-          <p>В праздники и высокий сезон стоимость выше. Напишите или позвоните — посчитаем на ваши даты и категорию отеля.</p>
-        </span>
-        <span class="askprice__actions">
-          <a class="btn btn--ghost btn--sm" href="tel:{PHONE_MAIN_TEL}">{IC_PHONE} Позвонить</a>
-          <a class="btn btn--primary btn--sm" href="{wa_href}" target="_blank" rel="noopener">{IC_WA} WhatsApp</a>
-        </span>
-      </div>
     </div>
   </section>
 
-  {tour_band}
   <section class="section" id="programma">
     <div class="wrap">
       <div class="section__head"><h2>Программа по дням</h2></div>
@@ -486,7 +473,12 @@ def build_tour(d: int, n: int) -> str:
       </div>
     </div>
   </section>
-
+"""
+        # C6: после программы — телефон и мессенджеры
+        + contacts("Звоните и пишите — подскажем по этому туру",
+                   "Ответим в рабочее время: ПН–ПТ 10:00–18:00.",
+                   wa_text)
+        + f"""
   <section class="section" id="video">
     <div class="wrap">
       <div class="section__head">
@@ -498,7 +490,12 @@ def build_tour(d: int, n: int) -> str:
       </div>
     </div>
   </section>
-
+"""
+        # C6: и ещё раз после видео
+        + contacts("Всегда рады вас проконсультировать",
+                   "Подберём даты и посчитаем стоимость.",
+                   wa_text)
+        + f"""
   <section class="section" id="drugie">
     <div class="wrap">
       <div class="section__head">
@@ -515,7 +512,7 @@ def build_tour(d: int, n: int) -> str:
 """ + footer(tail=f"""
 <div class="stickybar">
   <a class="icon-btn" href="tel:{PHONE_MAIN_TEL}" aria-label="Позвонить">{IC_PHONE}</a>
-  <a class="btn btn--primary" href="{wa_href}" target="_blank" rel="noopener">Написать в WhatsApp</a>
+  <a class="btn btn--primary" href="{wa(wa_text)}" target="_blank" rel="noopener">Спросить в WhatsApp</a>
 </div>
 """))
 
@@ -527,10 +524,16 @@ def main() -> None:
         fh.write(build_index())
     written.append("index.html")
 
+    # подчистить страницы туров, которых больше нет в каталоге (например, 2 дня)
+    keep = {slug(d) for d, _ in TOURS}
+    for f in os.listdir(HERE):
+        if f.startswith("tur-") and f.endswith(".html") and f not in keep:
+            os.remove(os.path.join(HERE, f))
+            written.append(f"{f} — удалена")
+
     for d, n in TOURS:
-        page = build_tour(d, n)
         with open(os.path.join(HERE, slug(d)), "w", encoding="utf-8") as fh:
-            fh.write(page)
+            fh.write(build_tour(d, n))
         written.append(slug(d))
 
     print("собрано:")
