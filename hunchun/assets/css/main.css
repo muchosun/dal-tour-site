@@ -985,3 +985,50 @@ body.has-stickybar { padding-bottom: 88px; }
   .duration__days { font-size: 22px; }
   .askprice { padding: 20px 24px; }
 }
+
+/* фотополоса под заголовком первого экрана */
+.hero__band {
+  margin-top: 24px;
+  border-radius: var(--r-block);
+  overflow: hidden;
+  background: var(--sand);
+}
+.hero__band picture { display: block; }
+.hero__band img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 1;
+  object-fit: cover;
+  object-position: 38% center;
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .hero__band picture { display: block; }
+.hero__band img { aspect-ratio: 10 / 3; object-position: center; }
+}
+.hero__grid--solo .hero__col { width: 100%; max-width: 100%; }
+
+@media (min-width: 1100px) {
+  .hero__grid--solo .hero__col { max-width: 760px; }
+  .hero__band { margin-top: 40px; }
+}
+
+/* фотополоса на странице тура */
+.tour__band {
+  margin-top: 28px;
+  border-radius: var(--r-block);
+  overflow: hidden;
+  background: var(--sand);
+}
+.tour__band picture { display: block; }
+.tour__band img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+}
+@media (min-width: 768px) {
+  .tour__band img { aspect-ratio: 21 / 9; }
+}

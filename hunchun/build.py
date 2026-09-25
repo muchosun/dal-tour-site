@@ -44,6 +44,26 @@ FAVICON = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox
            " text-anchor='middle'%3E%D0%94%3C/text%3E%3C/svg%3E")
 
 
+IMG_DIR = os.path.join(HERE, "assets", "img")
+
+
+def has_img(name: str) -> bool:
+    return os.path.exists(os.path.join(IMG_DIR, name))
+
+
+def picture(name: str, alt: str, cls: str, eager: bool = False,
+            w: int = 1600, h: int = 480) -> str:
+    """<img> с webp-версией, если она есть. Пустая строка, если файла нет."""
+    if not has_img(name + ".jpg"):
+        return ""
+    loading = 'loading="eager" fetchpriority="high"' if eager else 'loading="lazy"'
+    webp = (f'<source srcset="assets/img/{name}.webp" type="image/webp">'
+            if has_img(name + ".webp") else "")
+    return (f'<picture class="{cls}">{webp}'
+            f'<img src="assets/img/{name}.jpg" alt="{alt}" {loading} decoding="async"'
+            f' width="{w}" height="{h}"></picture>')
+
+
 def wa(text: str) -> str:
     return f"https://wa.me/{WA_NUMBER}?text={quote(text)}"
 
@@ -246,6 +266,15 @@ def build_index() -> str:
 
     wa_href = wa(f"Здравствуйте! Подскажите по турам в {CITY['name']}.")
 
+    shot = picture("hero", f"Автобус на отправлении в {CITY['name']} из {CITY['from'][:-1]}а",
+                   "hero__shot", eager=True)
+    hero_art = ("" if shot else
+                f'<div class="hero__art">'
+                f'<b lang="zh" style="font-family:var(--display);font-size:44px;'
+                f'color:#CDBFAC;line-height:1">{CITY["hiero"]}</b>'
+                f'<span>Здесь будет фотография города</span></div>')
+    hero_band = f'<div class="wrap"><div class="hero__band">{shot}</div></div>' if shot else ""
+
     return (head(
         f"Туры в {CITY['name']} из {CITY['from']} — ДАЛЬТУР",
         f"Туры в {CITY['name']} из {CITY['from']} от 2 до 10 дней. Программа по дням, "
@@ -254,7 +283,7 @@ def build_index() -> str:
 <main id="main">
 
   <section class="hero">
-    <div class="wrap hero__grid">
+    <div class="wrap hero__grid{' hero__grid--solo' if not hero_art else ''}">
       <div class="hero__col">
         <span class="hero__eyebrow">ТУРОПЕРАТОР ДАЛЬТУР · {CITY['from'].upper()}</span>
         <h1>Туры в {CITY['name']} <br class="br-desktop">из {CITY['from']}</h1>
@@ -281,11 +310,9 @@ def build_index() -> str:
         </div>
       </div>
 
-      <div class="hero__art">
-        <b lang="zh" style="font-family:var(--display);font-size:44px;color:#CDBFAC;line-height:1">{CITY['hiero']}</b>
-        <span>Первый экран без тяжёлых картинок — страница должна открываться мгновенно</span>
-      </div>
+      {hero_art}
     </div>
+    {hero_band}
   </section>
 
   <section class="section" id="tury">
@@ -336,6 +363,9 @@ def build_tour(d: int, n: int) -> str:
     lbl = label(d, n)
     wa_href = wa(f"Здравствуйте! Интересует тур в {CITY['name']} на {lbl}. "
                  f"Подскажите ближайшие даты и стоимость.")
+
+    shot = picture("tour", f"{CITY['name']}, фотография из тура", "", w=1600, h=900)
+    tour_band = f'<div class="wrap"><div class="tour__band">{shot}</div></div>' if shot else ""
 
     # программа по дням: каркас, тексты заказчик присылает отдельно
     days = []
@@ -418,6 +448,7 @@ def build_tour(d: int, n: int) -> str:
     </div>
   </section>
 
+  {tour_band}
   <section class="section" id="programma">
     <div class="wrap">
       <div class="section__head"><h2>Программа по дням</h2></div>
