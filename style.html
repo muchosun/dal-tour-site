@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Стиль ДАЛЬТУР — цвет, шрифт, компоненты</title>
+<meta name="description" content="Гайд по стилю редизайна ДАЛЬТУР: палитра, типографика, размеры, кнопки, теги, карточки и правила использования.">
+<meta name="theme-color" content="#FBF9F5">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23CE2B22'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-size='17' font-weight='700' fill='white' text-anchor='middle'%3E%D0%94%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Unbounded:wght@600;700&display=swap">
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Перейти к содержимому</a>
+
+<header class="header">
+  <div class="wrap">
+    <div class="header__center"><a class="logo" href="index.html">ДАЛЬТУР</a></div>
+    <nav class="header__nav" aria-label="Основная навигация">
+      <a href="index.html">Главная</a>
+      <a href="harbin.html">Харбин</a>
+      <a href="tur-harbin-5.html">Карточка тура</a>
+      <a href="style.html">Стиль</a>
+    </nav>
+    <div class="header__contacts">
+      <a class="btn btn--ghost btn--sm" href="index.html">К прототипу</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="section">
+    <div class="wrap">
+      <h1 style="font-size:30px">Стиль ДАЛЬТУР</h1>
+      <p style="margin-top:10px;max-width:640px;font-size:15px;line-height:1.55;color:var(--muted)">
+        Минимализм сохраняем: тёплая бумага вместо чистого белого, чёрный текст, фирменный красный — только на действиях. Нефритовый — служебный, для типов транспорта.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow">ЦВЕТ</p>
+      <div class="swatches">
+        <div class="swatch"><div class="swatch__chip" style="background:#CE2B22"></div><b>#CE2B22</b><span>Кнопки, логотип</span></div>
+        <div class="swatch"><div class="swatch__chip" style="background:#A7211A"></div><b>#A7211A</b><span>Ссылки, наведение</span></div>
+        <div class="swatch"><div class="swatch__chip" style="background:#16130F"></div><b>#16130F</b><span>Текст, тёмные блоки</span></div>
+        <div class="swatch"><div class="swatch__chip" style="background:#14655C"></div><b>#14655C</b><span>Теги транспорта</span></div>
+        <div class="swatch"><div class="swatch__chip" style="background:#FBF9F5"></div><b>#FBF9F5</b><span>Фон страницы</span></div>
+        <div class="swatch"><div class="swatch__chip" style="background:#E7E1D8"></div><b>#E7E1D8</b><span>Границы</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap" style="display:grid;grid-template-columns:minmax(0,1fr);gap:32px">
+      <div>
+        <p class="eyebrow">ТИПОГРАФИКА</p>
+        <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+          <span style="font-family:var(--display);font-weight:700;font-size:30px;line-height:1.1">Unbounded 700 · H1</span>
+          <span style="font-family:var(--display);font-weight:600;font-size:22px">Unbounded 600 · H2</span>
+          <span style="font-size:18px;font-weight:600">Golos Text 600 · подзаголовок</span>
+          <span style="font-size:15px;line-height:1.6;color:var(--ink-soft)">Golos Text 400 · основной текст, 15–18 px, интерлиньяж 1,55–1,65</span>
+          <span style="font-size:12px;color:var(--muted-2)">Golos Text 400 · подпись, 12–13 px</span>
+        </div>
+      </div>
+      <div>
+        <p class="eyebrow">РАЗМЕРЫ И ОТСТУПЫ</p>
+        <div class="kv">
+          <span>Поля: 80 px десктоп · 40 px планшет · 20 px мобильная</span>
+          <span>Брейкпоинты: 768 px (планшет) и 1100 px (десктоп)</span>
+          <span>Радиусы: 10 (кнопки) · 14–16 (карточки) · 20–24 (крупные блоки)</span>
+          <span>Высота кликабельных элементов: 44–54 px</span>
+          <span>Шаг вертикального ритма: 8 px</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow">КНОПКИ И ТЕГИ</p>
+      <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:10px">
+        <a class="btn btn--primary" href="#s">Подобрать тур</a>
+        <a class="btn btn--ghost" href="#s">Написать</a>
+        <a class="btn btn--dark" href="#s">Показать туры</a>
+      </div>
+      <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        <span class="tag tag--jade">АВТОБУС + САПСАН</span>
+        <span class="tag tag--red">АВИА</span>
+        <span class="pill">4–6 дней</span>
+        <button type="button" class="chip" aria-pressed="true">Все 14</button>
+      </div>
+      <div style="margin-top:20px;max-width:360px">
+        <div class="field">
+          <label for="s-tel">Телефон</label>
+          <input id="s-tel" type="tel" placeholder="+7 (___) ___-__-__">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow">КАРТОЧКИ</p>
+      <div class="dest-grid" style="max-width:420px">
+        <span class="dest">
+          <span class="dest__hiero" lang="zh" aria-hidden="true">哈尔滨</span>
+          <span><span class="dest__name">Харбин</span><span class="dest__meta">от [ЦЕНА] ₽ · 4–10 дней</span></span>
+        </span>
+        <span class="dest" style="border-width:2px;border-color:var(--ink)">
+          <span class="dest__name">Харбин<br>5 дней / 4 ночи</span>
+          <span style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px">
+            <span class="dest__meta">Выбранное состояние</span>
+            <span style="font-size:17px;font-weight:700">[ЦЕНА] ₽</span>
+          </span>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="incl__box">
+        <p class="eyebrow">ПРАВИЛА</p>
+        <div class="rules">
+          <span>· Красный — только действия и логотип, не для крупных плашек</span>
+          <span>· Иероглифы — декоративный акцент, не несут смысла для читателя</span>
+          <span>· Одна первичная кнопка на экран</span>
+          <span>· Фирменный рисунок — в одном блоке, не как фон всей страницы</span>
+          <span>· Заголовки: Unbounded, всё остальное: Golos Text</span>
+          <span>· Телефон и WhatsApp видны на каждом экране</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <p class="footer__legal" style="margin-top:0;border-top:0">
+      Гайд стиля прототипа ДАЛЬТУР. Все токены живут в <code>assets/css/main.css</code> в блоке <code>:root</code>.
+    </p>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>
