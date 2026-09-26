@@ -38,7 +38,7 @@ PHONE_MAIN_TEL = "+79644444144"
 PHONES_EXTRA = [("+7 (423) 248-48-92", "+74232484892"),
                 ("+7 (423) 248-48-91", "+74232484891")]
 WA_NUMBER = "79644444144"
-TG_LINK = "https://t.me/daltour"          # C4: ждём реальную ссылку от заказчика
+TG_LINK = "https://t.me/daltourChina"     # C4: закрыто, ссылка от заказчика
 SOCIALS = [("VK", "https://vk.com/daltour"),
            ("YouTube", "https://youtube.com/daltour"),
            ("Дзен", "https://dzen.ru/daltour")]
@@ -120,6 +120,17 @@ def label(d: int, n: int) -> str:
 
 def slug(d: int) -> str:
     return f"tur-{d}-{'dnya' if d < 5 else 'dney'}.html"
+
+
+# H1, H2: видео НЕ встраиваем плеером — по клику открывается новая вкладка
+# с Яндексом, сайт остаётся в своей. Так страница не тянет чужой скрипт.
+# Обычно 3–4 ролика на тур, максимум 5.
+VIDEO_SLOTS = 4
+
+# Заполняется, когда заказчик пришлёт ссылки:
+#   VIDEOS = {3: [("Аквапарк", "https://..."), ("Зоопарк", "https://...")]}
+# ключ — количество дней в туре.
+VIDEOS: dict[int, list[tuple[str, str]]] = {}
 
 
 # G1: дни подписываем словами — «люди не понимают один, два, три»
@@ -388,6 +399,27 @@ def build_index() -> str:
 """ + footer())
 
 
+def video_cards(d: int) -> str:
+    """H1–H3: карточка-ссылка на Яндекс, открывается в новой вкладке."""
+    items = VIDEOS.get(d)
+    if items:
+        return "\n".join(f"""        <a class="video" href="{url}" target="_blank" rel="noopener">
+          <span class="video__frame">
+            <span class="video__play">{IC_PLAY}</span>
+            <span class="video__hint">Смотреть на Яндексе</span>
+          </span>
+          <span class="video__cap">{name}</span>
+        </a>""" for name, url in items)
+
+    return "\n".join(f"""        <div class="video video--empty">
+          <span class="video__frame">
+            <span class="video__play">{IC_PLAY}</span>
+            <span class="video__hint">Откроется на Яндексе в новой вкладке</span>
+          </span>
+          <span class="video__cap">[ЭКСКУРСИЯ {v} — название и ссылку пришлёт заказчик]</span>
+        </div>""" for v in range(1, VIDEO_SLOTS + 1))
+
+
 # ---------------------------------------------------------------- страница тура
 
 def build_tour(d: int, n: int) -> str:
@@ -417,15 +449,7 @@ def build_tour(d: int, n: int) -> str:
           <p>{body}</p>
         </article>""")
 
-    # H1–H3: 4 слота под видео с Яндекса, подпись — название экскурсии
-    videos = "\n".join(f"""        <div class="video">
-          <div class="video__frame">
-            <span class="video__play">{IC_PLAY}</span>
-            <b>[ВИДЕО {v}]</b>
-            <span>Ссылку на Яндекс.Видео пришлёт заказчик</span>
-          </div>
-          <div class="video__cap">[НАЗВАНИЕ ЭКСКУРСИИ: аквапарк, зоопарк, чайная церемония]</div>
-        </div>""" for v in (1, 2, 3, 4))
+    videos = video_cards(d)
 
     others = "\n".join(
         f'        <a class="pill" href="{slug(od)}">{label(od, on)}</a>'
