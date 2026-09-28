@@ -9,9 +9,38 @@
 чтобы было видно, что чем закрыто.
 """
 import os
+import shutil
+import sys
 from urllib.parse import quote
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+# J1: боевые адреса. GitHub Pages разрешает один домен на репозиторий,
+# поэтому апекс и каждый сабдомен — свой репозиторий и своя папка в dist/.
+HOSTS = {
+    "main": "hunchun-hunchun.ru",
+    "stoma": "stomatologiya.hunchun-hunchun.ru",
+    "lech": "lechenie.hunchun-hunchun.ru",
+}
+MIRROR = "xn--h1adcgsc.xn--h1adcgsc.xn--p1ai"   # хуньчунь-хуньчунь.рф в punycode
+
+# python3 build.py          — превью, всё в одной папке, ссылки относительные
+# python3 build.py --split  — боевая сборка в dist/, ссылки между сайтами абсолютные
+SPLIT = "--split" in sys.argv
+DIST = os.path.join(HERE, "dist")
+
+
+def site_url(key: str, path: str = "") -> str:
+    """Ссылка на страницу. В боевой сборке — абсолютная, иначе относительная."""
+    if not SPLIT:
+        return {"main": f"index.html{path}",
+                "stoma": "stomatologiya.html",
+                "lech": "lechenie.html"}[key]
+    if key == "main":
+        return f"https://{HOSTS['main']}/{path}"
+    return f"https://{HOSTS[key]}/"
+
+
 
 # ---------------------------------------------------------------- город
 
@@ -154,6 +183,11 @@ def slug(d: int) -> str:
     return f"tur-{d}-{'dnya' if d < 5 else 'dney'}.html"
 
 
+def tour_url(d: int, base: str = "") -> str:
+    """Страницы туров живут на основном сайте."""
+    return site_url("main", slug(d)) if SPLIT else f"{base}{slug(d)}"
+
+
 # H1, H2: видео НЕ встраиваем плеером — по клику открывается новая вкладка
 # с Яндексом, сайт остаётся в своей. Так страница не тянет чужой скрипт.
 # Обычно 3–4 ролика на тур, максимум 5.
@@ -262,13 +296,13 @@ def header(base: str = "") -> str:
       <svg width="22" height="16" viewBox="0 0 22 16" fill="none" aria-hidden="true"><path d="M0 1h22M0 8h22M0 15h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     </button>
 
-    <div class="header__center"><a class="logo" href="{base}index.html">ДАЛЬТУР</a></div>
+    <div class="header__center"><a class="logo" href="{site_url("main")}">ДАЛЬТУР</a></div>
 
     <nav class="header__nav" aria-label="Основная навигация">
-      <a href="{base}index.html#tury">Все туры</a>
-      <a href="{base}stomatologiya.html">Стоматология</a>
-      <a href="{base}lechenie.html">Лечение</a>
-      <a href="{base}index.html#kontakty">Контакты</a>
+      <a href="{site_url("main", "#tury")}">Все туры</a>
+      <a href="{site_url("stoma")}">Стоматология</a>
+      <a href="{site_url("lech")}">Лечение</a>
+      <a href="{site_url("main", "#kontakty")}">Контакты</a>
     </nav>
 
     <div class="header__contacts">
@@ -295,12 +329,12 @@ def header(base: str = "") -> str:
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M1 1l14 14M15 1L1 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       </button>
     </div>
-    <a href="{base}index.html">Главная</a>
-    <a href="{base}index.html#tury">Все туры</a>
-    <a href="{base}index.html#o-gorode">О городе</a>
-    <a href="{base}stomatologiya.html">Стоматология</a>
-    <a href="{base}lechenie.html">Лечение</a>
-    <a href="{base}index.html#kontakty">Контакты</a>
+    <a href="{site_url("main")}">Главная</a>
+    <a href="{site_url("main", "#tury")}">Все туры</a>
+    <a href="{site_url("main", "#o-gorode")}">О городе</a>
+    <a href="{site_url("stoma")}">Стоматология</a>
+    <a href="{site_url("lech")}">Лечение</a>
+    <a href="{site_url("main", "#kontakty")}">Контакты</a>
     <a class="drawer__phone" href="tel:{PHONE_MAIN_TEL}">{PHONE_MAIN_HUMAN}</a>
     <a href="{TG_LINK}">Telegram</a>
   </nav>
@@ -310,7 +344,7 @@ def header(base: str = "") -> str:
 
 def footer(base: str = "", tail: str = "") -> str:
     tours_links = "\n".join(
-        f'          <li><a href="{base}{slug(d)}">{label(d, n)}</a></li>'
+        f'          <li><a href="{tour_url(d, base)}">{label(d, n)}</a></li>'
         for d, n in TOURS)
     # C5: городские номера внизу
     phones = "\n".join(f'          <a href="tel:{t}">{h}</a>' for h, t in PHONES_EXTRA)
@@ -477,7 +511,7 @@ def build_page(pg: dict) -> str:
   <section class="hero hero--lean">
     <div class="wrap">
       <nav class="crumbs" aria-label="Хлебные крошки">
-        <a href="index.html">Туры в {CITY['name']}</a><span aria-hidden="true">/</span>
+        <a href="{site_url("main")}">Туры в {CITY['name']}</a><span aria-hidden="true">/</span>
         <span aria-current="page">{pg["nav"]}</span>
       </nav>
       <h1>{pg["h1"]}</h1>
@@ -554,7 +588,7 @@ def build_tour(d: int, n: int) -> str:
     videos = video_cards(d)
 
     others = "\n".join(
-        f'        <a class="pill" href="{slug(od)}">{label(od, on)}</a>'
+        f'        <a class="pill" href="{tour_url(od)}">{label(od, on)}</a>'
         for od, on in TOURS if od != d)
 
     return (head(
@@ -568,7 +602,7 @@ def build_tour(d: int, n: int) -> str:
   <section class="tour-head">
     <div class="wrap">
       <nav class="crumbs" aria-label="Хлебные крошки">
-        <a href="index.html">Туры в {CITY['name']}</a><span aria-hidden="true">/</span>
+        <a href="{site_url("main")}">Туры в {CITY['name']}</a><span aria-hidden="true">/</span>
         <span aria-current="page">{lbl}</span>
       </nav>
 
@@ -643,14 +677,61 @@ def build_tour(d: int, n: int) -> str:
 """))
 
 
+def build_dist() -> list:
+    """Три отдельных корня под три домена: у каждого свой CNAME."""
+    out = []
+    if os.path.isdir(DIST):
+        shutil.rmtree(DIST)
+
+    plan = [
+        ("main", HOSTS["main"], None),
+        ("stoma", HOSTS["stoma"], PAGES[0]),
+        ("lech", HOSTS["lech"], PAGES[1]),
+    ]
+
+    for key, host, pg in plan:
+        root = os.path.join(DIST, key)
+        os.makedirs(root)
+        shutil.copytree(os.path.join(HERE, "assets"), os.path.join(root, "assets"))
+
+        with open(os.path.join(root, "CNAME"), "w", encoding="utf-8") as fh:
+            fh.write(host + "\n")
+
+        if key == "main":
+            with open(os.path.join(root, "index.html"), "w", encoding="utf-8") as fh:
+                fh.write(build_index())
+            for d, n in TOURS:
+                with open(os.path.join(root, slug(d)), "w", encoding="utf-8") as fh:
+                    fh.write(build_tour(d, n))
+            out.append(f"dist/{key}/ — {host}, {len(TOURS) + 1} страниц")
+        else:
+            with open(os.path.join(root, "index.html"), "w", encoding="utf-8") as fh:
+                fh.write(build_page(pg))
+            out.append(f"dist/{key}/ — {host}, 1 страница")
+
+        # GitHub Pages иначе прогонит файлы через Jekyll
+        open(os.path.join(root, ".nojekyll"), "w").close()
+
+    return out
+
+
 def main() -> None:
+    # В боевом режиме пишем только dist/, чтобы в папку превью не попали
+    # абсолютные ссылки на ещё не поднятые домены.
+    if SPLIT:
+        for w in build_dist():
+            print("  ", w)
+        print("\nдальше: каждая папка dist/* — корень отдельного репозитория,")
+        print("CNAME внутри уже проставлен. DNS-записи — в DEPLOY.md")
+        return
+
     written = []
 
     with open(os.path.join(HERE, "index.html"), "w", encoding="utf-8") as fh:
         fh.write(build_index())
     written.append("index.html")
 
-    # подчистить страницы туров, которых больше нет в каталоге (например, 2 дня)
+    # подчистить страницы туров, которых больше нет в каталоге
     keep = {slug(d) for d, _ in TOURS}
     for f in os.listdir(HERE):
         if f.startswith("tur-") and f.endswith(".html") and f not in keep:
@@ -667,7 +748,7 @@ def main() -> None:
             fh.write(build_page(pg))
         written.append(pg["slug"])
 
-    print("собрано:")
+    print("собрано (превью):")
     for w in written:
         print("  ", w)
 
