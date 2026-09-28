@@ -25,7 +25,7 @@ HOSTS = {
     "stoma": "dental.hunchun-hunchun.ru",
     "lech": "clinic.hunchun-hunchun.ru",
 }
-MIRROR = "xn--h1adcgsc.xn--h1adcgsc.xn--p1ai"   # хуньчунь-хуньчунь.рф в punycode
+MIRROR = "xn----ytbaba5abcbmfug6dded.xn--p1ai"   # хуньчунь-хуньчунь.рф в punycode
 
 # python3 build.py          — превью, всё в одной папке, ссылки относительные
 # python3 build.py --split  — боевая сборка в dist/, ссылки между сайтами абсолютные
@@ -857,7 +857,53 @@ def build_dist() -> list:
         with open(os.path.join(root, "robots.txt"), "w", encoding="utf-8") as fh:
             fh.write(f"User-agent: *\nAllow: /\n\nSitemap: https://{host}/sitemap.xml\n")
 
+    out.append(build_mirror())
     return out
+
+
+def redirect_page(target: str) -> str:
+    """Страница зеркала: сразу уводит на тот же адрес основного домена.
+    301 GitHub Pages не умеет; мгновенный meta refresh Яндекс и Google
+    считают перенаправлением, canonical подтверждает главное зеркало."""
+    return f"""<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>ДАЛЬТУР — туры в Хуньчунь</title>
+<link rel="canonical" href="{target}">
+<meta http-equiv="refresh" content="0; url={target}">
+<script>location.replace("{target}" + location.search + location.hash)</script>
+</head>
+<body><p><a href="{target}">{target}</a></p></body>
+</html>
+"""
+
+
+def build_mirror() -> str:
+    """хуньчунь-хуньчунь.рф → hunchun-hunchun.ru, каждая страница на свою."""
+    root = os.path.join(DIST, "rf")
+    os.makedirs(root, exist_ok=True)
+    for name in os.listdir(root):
+        if name != ".git":
+            path = os.path.join(root, name)
+            shutil.rmtree(path) if os.path.isdir(path) else os.remove(path)
+    pages = [("index.html", canon("main"))] + [(slug(d), canon("main", slug(d))) for d, _ in TOURS]
+    for name, target in pages:
+        with open(os.path.join(root, name), "w", encoding="utf-8") as fh:
+            fh.write(redirect_page(target))
+    # Любой другой адрес — на тот же путь основного домена
+    main_root = f"https://{HOSTS['main']}"
+    with open(os.path.join(root, "404.html"), "w", encoding="utf-8") as fh:
+        fh.write(redirect_page(main_root + "/").replace(
+            f'location.replace("{main_root}/" + location.search + location.hash)',
+            f'location.replace("{main_root}" + location.pathname + location.search + location.hash)'))
+    with open(os.path.join(root, "CNAME"), "w", encoding="utf-8") as fh:
+        fh.write(MIRROR + "\n")
+    open(os.path.join(root, ".nojekyll"), "w").close()
+    # Без Sitemap: в карте зеркала не может быть адресов чужого домена
+    with open(os.path.join(root, "robots.txt"), "w", encoding="utf-8") as fh:
+        fh.write("User-agent: *\nAllow: /\n")
+    return f"dist/rf/ — {MIRROR} → {HOSTS['main']}, {len(pages)} страниц-редиректов"
 
 
 def main() -> None:
