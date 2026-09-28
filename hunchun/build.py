@@ -11,6 +11,7 @@
 import hashlib
 import os
 import pathlib
+import re
 import shutil
 import sys
 from urllib.parse import quote
@@ -277,6 +278,35 @@ def contacts(title: str, note: str, wa_text: str, anchor: str = "") -> str:
 
 # ---------------------------------------------------------------- каркас
 
+# Шрифты лежат на своём домене: запрос к Google Fonts блокировал отрисовку
+# (~750 мс по PageSpeed), а из России fonts.googleapis.com бывает медленным.
+# Оба шрифта вариативные — один файл на набор символов покрывает все толщины.
+FONT_RANGES = {
+    "cyrillic": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116",
+    "latin": ("U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, "
+              "U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, "
+              "U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"),
+}
+FONTS = (("Golos Text", "golos", "400 700"), ("Unbounded", "unbounded", "600 700"))
+
+
+def font_faces(base: str = "") -> str:
+    return "".join(
+        f"@font-face{{font-family:'{family}';font-style:normal;font-weight:{weights};"
+        f"font-display:swap;src:url({base}{asset_v(f'assets/fonts/{stem}-{sub}.woff2')}) "
+        f"format('woff2');unicode-range:{rng}}}"
+        for family, stem, weights in FONTS for sub, rng in FONT_RANGES.items())
+
+
+def inline_css() -> str:
+    """main.css прямо в <head>: минус один блокирующий запрос. Кэш на GitHub
+    Pages всё равно 10 минут, отдельный файл почти ничего не экономит."""
+    css = pathlib.Path(os.path.join(HERE, "assets/css/main.css")).read_text(encoding="utf-8")
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    css = re.sub(r"\s+", " ", css)
+    return re.sub(r"\s*([{};,>])\s*", r"\1", css).strip()
+
+
 def head(title: str, desc: str, base: str = "", sticky: bool = False,
          canonical: str = "") -> str:
     # Превью (staging на github.io) закрываем от индексации целиком: иначе
@@ -302,10 +332,9 @@ def head(title: str, desc: str, base: str = "", sticky: bool = False,
 <meta property="og:description" content="{desc}">
 <meta property="og:locale" content="ru_RU">
 <link rel="icon" href="{FAVICON}">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Unbounded:wght@600;700&display=swap">
-<link rel="stylesheet" href="{base}{asset_v('assets/css/main.css')}">
+<link rel="preload" href="{base}{asset_v('assets/fonts/unbounded-cyrillic.woff2')}" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{base}{asset_v('assets/fonts/golos-cyrillic.woff2')}" as="font" type="font/woff2" crossorigin>
+<style>{font_faces(base)}{inline_css()}</style>
 </head>
 <body{' class="has-stickybar"' if sticky else ''}>
 
@@ -425,7 +454,7 @@ def footer(base: str = "", tail: str = "") -> str:
   </div>
 </footer>
 {tail}
-<script src="{base}{asset_v('assets/js/main.js')}"></script>
+<script src="{base}{asset_v('assets/js/main.js')}" defer></script>
 </body>
 </html>
 """
