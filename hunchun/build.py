@@ -19,8 +19,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # поэтому апекс и каждый сабдомен — свой репозиторий и своя папка в dist/.
 HOSTS = {
     "main": "hunchun-hunchun.ru",
-    "stoma": "stomatologiya.hunchun-hunchun.ru",
-    "lech": "lechenie.hunchun-hunchun.ru",
+    "stoma": "dental.hunchun-hunchun.ru",
+    "lech": "clinic.hunchun-hunchun.ru",
 }
 MIRROR = "xn--h1adcgsc.xn--h1adcgsc.xn--p1ai"   # хуньчунь-хуньчунь.рф в punycode
 

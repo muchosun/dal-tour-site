@@ -20,8 +20,8 @@ python3 build.py --split
 | Папка | Домен | Содержимое |
 |---|---|---|
 | `dist/main` | `hunchun-hunchun.ru` | главная и 8 страниц туров |
-| `dist/stoma` | `stomatologiya.hunchun-hunchun.ru` | стоматология |
-| `dist/lech` | `lechenie.hunchun-hunchun.ru` | лечение |
+| `dist/stoma` | `dental.hunchun-hunchun.ru` | стоматология |
+| `dist/lech` | `clinic.hunchun-hunchun.ru` | лечение |
 
 Без флага `--split` собирается превью в текущую папку с относительными
 ссылками — то, что сейчас на `muchosun.github.io/dal-tour-site/hunchun/`.
@@ -33,8 +33,8 @@ python3 build.py --split
 | Репозиторий | Домен |
 |---|---|
 | `hunchun-hunchun` | `hunchun-hunchun.ru` |
-| `hunchun-stomatologiya` | `stomatologiya.hunchun-hunchun.ru` |
-| `hunchun-lechenie` | `lechenie.hunchun-hunchun.ru` |
+| `hunchun-dental` | `dental.hunchun-hunchun.ru` |
+| `hunchun-clinic` | `clinic.hunchun-hunchun.ru` |
 
 На бесплатном тарифе Pages работает только из публичного репозитория.
 
@@ -65,8 +65,8 @@ python3 build.py --split
 ### Сабдомены
 
 ```
-stomatologiya   CNAME   muchosun.github.io.
-lechenie        CNAME   muchosun.github.io.
+dental   CNAME   muchosun.github.io.
+clinic   CNAME   muchosun.github.io.
 ```
 
 Точка в конце обязательна, если панель регистратора требует FQDN.
@@ -107,11 +107,16 @@ lechenie        CNAME   muchosun.github.io.
    восемь товаров WooCommerce останутся без витрины. Так делать стоит
    только после того, как новый домен проиндексируется.
 
-## Чего я не делаю
+## Доступы
 
-Доступы к регистратору и хостингу заказчик прислал в переписке. Я ими не
-пользуюсь: заходить в чужую панель под его логином и паролем нельзя. DNS
-вносит владелец домена или тот, кому он это делегировал.
+Лежат в `../../.env.domains` — вне git-репозитория, `chmod 600`.
 
-Заодно: пароли, отправленные сообщением в мессенджер, стоит сменить после
-настройки.
+**Токеном API регистратора работать могу**: проверить записи, подготовить и
+внести изменения. Само изменение — только после подтверждения, откатывать
+дольше, чем делать.
+
+**Личным логином и паролем от панели — нет.** Авторизация в чужом аккаунте
+паролем не моя зона, даже когда доступ дали. Если API у регистратора нет,
+записи вносятся руками по списку выше.
+
+Пароли, отправленные сообщением в мессенджер, стоит сменить после настройки.
