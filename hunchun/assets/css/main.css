@@ -1155,3 +1155,39 @@ a.video:hover .video__play { color: var(--red); }
   .section--tight { padding-top: 32px; }
   .mark { font-size: 17px; }
 }
+
+/* K: контентные страницы — стоматология, лечение */
+.prose { max-width: 780px; }
+.prose p { font-size: 16px; line-height: 1.7; color: var(--muted); }
+.prose p + p { margin-top: 14px; }
+
+.gallery {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+.gallery__item { border-radius: var(--r-block); overflow: hidden; }
+.gallery__item picture { display: block; }
+.gallery__item img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  display: block;
+}
+.gallery__item--empty {
+  aspect-ratio: 3 / 2;
+  background: var(--sand);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+}
+.gallery__item--empty span { font-size: 13px; color: #9A8B73; }
+
+@media (min-width: 768px) {
+  .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  .prose p { font-size: 17px; }
+}

@@ -25,6 +25,38 @@ CITY = {
             "туры от 3 до 10 дней.",
 }
 
+# J2, J3: домены от заказчика. Канонический выбираем позже (см. PRD).
+DOMAINS = ["hunchun-hunchun.ru", "хуньчунь-хуньчунь.рф"]
+
+# K: отдельные разделы «просто текст и пара картинок».
+# Если заказчик захочет их на своих доменах — каждая страница уже
+# самодостаточна, выносится копированием вместе с assets.
+PAGES = [
+    {
+        "slug": "stomatologiya.html",
+        "nav": "Стоматология",
+        "h1": "Стоматология в Хуньчуне",
+        "lead": "[ЛИД — 1–2 предложения: почему за стоматологией едут в "
+                "Хуньчунь. Текст пришлёт заказчик.]",
+        "desc": "Стоматология в Хуньчуне: как проходит поездка, что нужно "
+                "знать. Запись и вопросы по телефону {phone}.",
+        "imgs": ["stoma-1", "stoma-2"],
+        "wa": "Здравствуйте! Интересует стоматология в Хуньчуне.",
+    },
+    {
+        "slug": "lechenie.html",
+        "nav": "Лечение",
+        "h1": "Лечение в Хуньчуне",
+        "lead": "[ЛИД — 1–2 предложения: какие направления лечения доступны "
+                "в Хуньчуне. Текст пришлёт заказчик.]",
+        "desc": "Лечение в Хуньчуне: как организована поездка, что нужно "
+                "знать. Вопросы по телефону {phone}.",
+        "imgs": ["lech-1", "lech-2"],
+        "wa": "Здравствуйте! Интересует лечение в Хуньчуне.",
+    },
+]
+
+
 # Тег транспорта. Для Яньцзи будет «АВТОБУС + ПОЕЗД» — F7.
 TRANSPORT = "АВТОБУС"
 
@@ -234,7 +266,8 @@ def header(base: str = "") -> str:
 
     <nav class="header__nav" aria-label="Основная навигация">
       <a href="{base}index.html#tury">Все туры</a>
-      <a href="{base}index.html#o-gorode">О городе</a>
+      <a href="{base}stomatologiya.html">Стоматология</a>
+      <a href="{base}lechenie.html">Лечение</a>
       <a href="{base}index.html#kontakty">Контакты</a>
     </nav>
 
@@ -265,6 +298,8 @@ def header(base: str = "") -> str:
     <a href="{base}index.html">Главная</a>
     <a href="{base}index.html#tury">Все туры</a>
     <a href="{base}index.html#o-gorode">О городе</a>
+    <a href="{base}stomatologiya.html">Стоматология</a>
+    <a href="{base}lechenie.html">Лечение</a>
     <a href="{base}index.html#kontakty">Контакты</a>
     <a class="drawer__phone" href="tel:{PHONE_MAIN_TEL}">{PHONE_MAIN_HUMAN}</a>
     <a href="{TG_LINK}">Telegram</a>
@@ -420,6 +455,73 @@ def video_cards(d: int) -> str:
         </div>""" for v in range(1, VIDEO_SLOTS + 1))
 
 
+# ---------------------------------------------------------------- контентные страницы
+
+def build_page(pg: dict) -> str:
+    """K: страница «текст и пара картинок» — стоматология, лечение."""
+    shots = ""
+    for i, name in enumerate(pg["imgs"]):
+        img = picture(name, f'{pg["h1"]}, фотография {i + 1}', "", w=1600, h=1067)
+        if img:
+            shots += f'        <div class="gallery__item">{img}</div>\n'
+        else:
+            shots += (f'        <div class="gallery__item gallery__item--empty">'
+                      f'<span>[ФОТОГРАФИЯ {i + 1} — пришлёт заказчик]</span></div>\n')
+
+    return (head(
+        f'{pg["h1"]} — ДАЛЬТУР',
+        pg["desc"].format(phone=PHONE_MAIN_HUMAN))
+        + header() + f"""
+<main id="main">
+
+  <section class="hero hero--lean">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Хлебные крошки">
+        <a href="index.html">Туры в {CITY['name']}</a><span aria-hidden="true">/</span>
+        <span aria-current="page">{pg["nav"]}</span>
+      </nav>
+      <h1>{pg["h1"]}</h1>
+      <p class="hero__lead">{pg["lead"]}</p>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="wrap">
+      <div class="prose">
+        <p>[ОСНОВНОЙ ТЕКСТ — 2–4 абзаца. Что входит, как проходит поездка,
+        сколько занимает, что взять с собой. Пришлёт заказчик.]</p>
+        <p>[ВТОРОЙ АБЗАЦ.]</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="gallery">
+{shots}      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="notice">
+        <b>Важно</b>
+        <p>[ДИСКЛЕЙМЕР — проверить с юристом. Реклама медицинских услуг в РФ,
+        как правило, требует предупреждения о противопоказаниях и
+        необходимости консультации специалиста. Точную формулировку
+        согласовать до публикации на боевом домене.]</p>
+      </div>
+    </div>
+  </section>
+"""
+        + contacts("Всегда рады вас проконсультировать",
+                   "Расскажем, как проходит поездка, и ответим на вопросы.",
+                   pg["wa"])
+        + """
+</main>
+""" + footer())
+
+
 # ---------------------------------------------------------------- страница тура
 
 def build_tour(d: int, n: int) -> str:
@@ -559,6 +661,11 @@ def main() -> None:
         with open(os.path.join(HERE, slug(d)), "w", encoding="utf-8") as fh:
             fh.write(build_tour(d, n))
         written.append(slug(d))
+
+    for pg in PAGES:
+        with open(os.path.join(HERE, pg["slug"]), "w", encoding="utf-8") as fh:
+            fh.write(build_page(pg))
+        written.append(pg["slug"])
 
     print("собрано:")
     for w in written:
