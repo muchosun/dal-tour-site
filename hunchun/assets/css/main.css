@@ -1191,3 +1191,86 @@ a.video:hover .video__play { color: var(--red); }
   .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
   .prose p { font-size: 17px; }
 }
+
+/* статьи заказчика на страницах стоматологии и лечения */
+.prose h2 {
+  margin-top: 36px;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.25;
+  color: var(--ink);
+}
+.prose h2 + p { margin-top: 12px; }
+.prose__list {
+  margin: 14px 0 0;
+  padding-left: 20px;
+  list-style: disc;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.prose__list + p { margin-top: 14px; }
+@media (min-width: 1100px) {
+  .prose h2 { font-size: 26px; margin-top: 44px; }
+}
+
+/* карточка видео с превью с Дзена */
+.video--thumb .video__frame {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+  background: var(--ink);
+}
+.video--thumb .video__frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.video--thumb .video__play {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, .45));
+}
+.video--thumb:hover .video__play { color: #fff; transform: scale(1.08); }
+.video__play { transition: color .15s, transform .15s; }
+.video__len {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  z-index: 1;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(22, 19, 15, .78);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+.video__cap small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted-3);
+}
+
+/* плеер Дзена после нажатия */
+.video.is-playing { cursor: default; }
+.video.is-playing:hover { border-color: var(--line); }
+.video.is-playing .video__frame { padding: 0; background: #000; }
+.video.is-playing iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+.video--thumb .video__frame, .video.is-playing .video__frame { position: relative; }

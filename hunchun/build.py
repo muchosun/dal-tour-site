@@ -8,7 +8,9 @@
 Требования — в PRD.md. В комментариях ниже проставлены id требований,
 чтобы было видно, что чем закрыто.
 """
+import hashlib
 import os
+import pathlib
 import shutil
 import sys
 from urllib.parse import quote
@@ -28,6 +30,13 @@ MIRROR = "xn--h1adcgsc.xn--h1adcgsc.xn--p1ai"   # хуньчунь-хуньчу�
 # python3 build.py --split  — боевая сборка в dist/, ссылки между сайтами абсолютные
 SPLIT = "--split" in sys.argv
 DIST = os.path.join(HERE, "dist")
+
+
+def asset_v(rel: str) -> str:
+    """Версия файла по хэшу содержимого. Поменялся файл — поменялась ссылка,
+    и браузер не отдаст из кэша старый CSS или JS."""
+    data = pathlib.Path(os.path.join(HERE, rel)).read_bytes()
+    return f"{rel}?v={hashlib.sha1(data).hexdigest()[:8]}"
 
 
 def site_url(key: str, path: str = "") -> str:
@@ -64,23 +73,36 @@ PAGES = [
     {
         "slug": "stomatologiya.html",
         "nav": "Стоматология",
-        "h1": "Стоматология в Хуньчуне",
-        "lead": "[ЛИД — 1–2 предложения: почему за стоматологией едут в "
-                "Хуньчунь. Текст пришлёт заказчик.]",
-        "desc": "Стоматология в Хуньчуне: как проходит поездка, что нужно "
-                "знать. Запись и вопросы по телефону {phone}.",
+        "content": "stomatologiya.md",
+        "title": "Стоматология в Хуньчуне — лечение и протезирование зубов, "
+                 "цены и отзывы",
+        "desc": "Стоматология в Хуньчуне, Китай: лечение зубов, протезирование "
+                "и имплантация. Цены, отзывы и поездки в Хуньчунь из "
+                "Владивостока с компанией «Дальтур».",
         "imgs": ["stoma-1", "stoma-2"],
+        "videos": [("Стоматология в Хуньчуне",
+                    "https://dzen.ru/video/watch/667cb4c8c5d3b34f342f0946",
+                    "video-stoma-1", 1259, "vkGZpvH8-TWU")],
         "wa": "Здравствуйте! Интересует стоматология в Хуньчуне.",
     },
     {
         "slug": "lechenie.html",
         "nav": "Лечение",
-        "h1": "Лечение в Хуньчуне",
-        "lead": "[ЛИД — 1–2 предложения: какие направления лечения доступны "
-                "в Хуньчуне. Текст пришлёт заказчик.]",
-        "desc": "Лечение в Хуньчуне: как организована поездка, что нужно "
-                "знать. Вопросы по телефону {phone}.",
+        "content": "lechenie.md",
+        "title": "Лечение в Хуньчуне, Китай — цены, клиники, отзывы | ДАЛЬТУР",
+        "desc": "Лечение в Хуньчуне из Владивостока: стоматология, лечение "
+                "зубов, позвоночника и суставов. Цены, клиники, процедуры и "
+                "организация поездки в Китай с ДАЛЬТУР.",
         "imgs": ["lech-1", "lech-2"],
+        # второй ролик заказчик прислал ссылкой yandex.ru/video/preview/… —
+        # это обёртка, которая крутит две сторонние рекламы перед роликом.
+        # Источник — Дзен, канал ДАЛЬТУР, ссылаемся напрямую.
+        "videos": [("Лечение и стоматология в Хуньчуне",
+                    "https://dzen.ru/video/watch/656c36c30befad215ce48720",
+                    "video-lech-1", 1402, "veb3SLmoQ5Hk"),
+                   ("Лечение в Хуньчуне: клиники и цены",
+                    "https://dzen.ru/video/watch/695b5698a45e4e67c3bbee6a",
+                    "video-lech-2", 1108, "oy0Z1aSYKAAA")],
         "wa": "Здравствуйте! Интересует лечение в Хуньчуне.",
     },
 ]
@@ -267,7 +289,7 @@ def head(title: str, desc: str, base: str = "", sticky: bool = False) -> str:
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Unbounded:wght@600;700&display=swap">
-<link rel="stylesheet" href="{base}assets/css/main.css">
+<link rel="stylesheet" href="{base}{asset_v('assets/css/main.css')}">
 </head>
 <body{' class="has-stickybar"' if sticky else ''}>
 
@@ -387,7 +409,7 @@ def footer(base: str = "", tail: str = "") -> str:
   </div>
 </footer>
 {tail}
-<script src="{base}assets/js/main.js"></script>
+<script src="{base}{asset_v('assets/js/main.js')}"></script>
 </body>
 </html>
 """
@@ -468,6 +490,32 @@ def build_index() -> str:
 """ + footer())
 
 
+def esc(s: str) -> str:
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def render_md(name: str) -> tuple:
+    """Очень простой markdown: # заголовок, ## подзаголовок, - список, абзацы.
+    Возвращает (h1, html остального текста)."""
+    raw = pathlib.Path(os.path.join(HERE, "content", name)).read_text(encoding="utf-8")
+    h1, parts = "", []
+    for block in raw.split("\n\n"):
+        b = block.strip()
+        if not b:
+            continue
+        if b.startswith("# "):
+            h1 = esc(b[2:].strip())
+        elif b.startswith("## "):
+            parts.append(f"<h2>{esc(b[3:].strip())}</h2>")
+        elif b.startswith("- "):
+            items = "".join(f"<li>{esc(l[2:].strip())}</li>"
+                            for l in b.split("\n") if l.strip().startswith("- "))
+            parts.append(f"<ul class=\"prose__list\">{items}</ul>")
+        else:
+            parts.append(f"<p>{esc(' '.join(b.split()))}</p>")
+    return h1, "\n        ".join(parts)
+
+
 def video_cards(d: int) -> str:
     """H1–H3: карточка-ссылка на Яндекс, открывается в новой вкладке."""
     items = VIDEOS.get(d)
@@ -492,20 +540,40 @@ def video_cards(d: int) -> str:
 # ---------------------------------------------------------------- контентные страницы
 
 def build_page(pg: dict) -> str:
-    """K: страница «текст и пара картинок» — стоматология, лечение."""
+    """K: статья заказчика, фото, видео и контакты — стоматология, лечение."""
+    h1, article = render_md(pg["content"])
+
     shots = ""
     for i, name in enumerate(pg["imgs"]):
-        img = picture(name, f'{pg["h1"]}, фотография {i + 1}', "", w=1600, h=1067)
-        if img:
-            shots += f'        <div class="gallery__item">{img}</div>\n'
-        else:
-            shots += (f'        <div class="gallery__item gallery__item--empty">'
-                      f'<span>[ФОТОГРАФИЯ {i + 1} — пришлёт заказчик]</span></div>\n')
+        img = picture(name, f"{h1}, фотография {i + 1}", "", w=1600, h=1067)
+        shots += (f'        <div class="gallery__item">{img}</div>\n' if img else
+                  f'        <div class="gallery__item gallery__item--empty">'
+                  f'<span>[ФОТОГРАФИЯ {i + 1} — пришлёт заказчик]</span></div>\n')
 
-    return (head(
-        f'{pg["h1"]} — ДАЛЬТУР',
-        pg["desc"].format(phone=PHONE_MAIN_HUMAN))
-        + header() + f"""
+    # видео открывается на Яндексе в новой вкладке, как на страницах туров
+    # Плеер «по клику»: сначала только превью, iframe Дзена создаётся при
+    # нажатии и сразу стартует. Страница не грузит плеер заранее, а href на
+    # страницу ролика остаётся запасным путём, если скрипты отключены.
+    # embed-id Дзен отдаёт в <meta name="twitter:player:stream"> страницы ролика.
+    def vcard(name: str, url: str, thumb: str, secs: int, embed: str = "") -> str:
+        mins = f"{secs // 60} мин"
+        data = f' data-embed="https://dzen.ru/embed/{embed}"' if embed else ""
+        hint = "Смотреть здесь же" if embed else "Откроется на Дзене в новой вкладке"
+        img = (f'<img src="assets/img/{thumb}.jpg" alt="" loading="lazy" '
+               f'decoding="async" width="516" height="290">'
+               if has_img(thumb + ".jpg") else "")
+        return f"""        <a class="video{' video--thumb' if img else ''}" href="{url}" target="_blank" rel="noopener"{data}>
+          <span class="video__frame">
+            {img}
+            <span class="video__play">{IC_PLAY}</span>
+            <span class="video__len">{mins}</span>
+          </span>
+          <span class="video__cap">{name}<small>{hint}</small></span>
+        </a>"""
+
+    vids = "\n".join(vcard(*v) for v in pg["videos"])
+
+    return (head(pg["title"], pg["desc"]) + header() + f"""
 <main id="main">
 
   <section class="hero hero--lean">
@@ -514,17 +582,23 @@ def build_page(pg: dict) -> str:
         <a href="{site_url("main")}">Туры в {CITY['name']}</a><span aria-hidden="true">/</span>
         <span aria-current="page">{pg["nav"]}</span>
       </nav>
-      <h1>{pg["h1"]}</h1>
-      <p class="hero__lead">{pg["lead"]}</p>
+      <h1>{h1}</h1>
     </div>
   </section>
 
   <section class="section section--tight">
     <div class="wrap">
-      <div class="prose">
-        <p>[ОСНОВНОЙ ТЕКСТ — 2–4 абзаца. Что входит, как проходит поездка,
-        сколько занимает, что взять с собой. Пришлёт заказчик.]</p>
-        <p>[ВТОРОЙ АБЗАЦ.]</p>
+      <article class="prose">
+        {article}
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="video">
+    <div class="wrap">
+      <div class="section__head"><h2>Видео</h2></div>
+      <div class="videos">
+{vids}
       </div>
     </div>
   </section>

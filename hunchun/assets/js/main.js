@@ -43,8 +43,37 @@
     });
   }
 
+  /* Видео: плеер Дзена по клику. До нажатия — только превью. */
+  function initVideos() {
+    Array.prototype.forEach.call(document.querySelectorAll('a.video[data-embed]'), function (card) {
+      card.addEventListener('click', function (e) {
+        var frame = card.querySelector('.video__frame');
+        if (!frame || card.classList.contains('is-playing')) return;
+        e.preventDefault();
+
+        var iframe = document.createElement('iframe');
+        var src = card.getAttribute('data-embed');
+        iframe.src = src + (src.indexOf('?') === -1 ? '?' : '&') + 'autoplay=1';
+        iframe.title = (card.querySelector('.video__cap') || {}).firstChild
+          ? card.querySelector('.video__cap').firstChild.textContent.trim()
+          : 'Видео';
+        iframe.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
+        iframe.setAttribute('allowfullscreen', '');
+        iframe.setAttribute('frameborder', '0');
+
+        frame.innerHTML = '';
+        frame.appendChild(iframe);
+        card.classList.add('is-playing');
+        // после запуска карточка больше не ссылка — иначе клики по плееру уводили бы на Дзен
+        card.removeAttribute('href');
+        card.setAttribute('role', 'group');
+      });
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     initDrawer();
     initYear();
+    initVideos();
   });
 })();
