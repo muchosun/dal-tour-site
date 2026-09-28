@@ -205,6 +205,11 @@ def slug(d: int) -> str:
     return f"tur-{d}-{'dnya' if d < 5 else 'dney'}.html"
 
 
+def canon(key: str, path: str = "") -> str:
+    """Канонический адрес страницы. Всегда боевой хост, даже на зеркале."""
+    return f"https://{HOSTS[key]}/{path}"
+
+
 def tour_url(d: int, base: str = "") -> str:
     """Страницы туров живут на основном сайте."""
     return site_url("main", slug(d)) if SPLIT else f"{base}{slug(d)}"
@@ -272,7 +277,17 @@ def contacts(title: str, note: str, wa_text: str, anchor: str = "") -> str:
 
 # ---------------------------------------------------------------- каркас
 
-def head(title: str, desc: str, base: str = "", sticky: bool = False) -> str:
+def head(title: str, desc: str, base: str = "", sticky: bool = False,
+         canonical: str = "") -> str:
+    # Превью (staging на github.io) закрываем от индексации целиком: иначе
+    # после запуска это полная копия боевого сайта на чужом адресе.
+    # В боевой сборке каждая страница указывает свой канонический адрес —
+    # по нему же будет ссылаться зеркало на .рф.
+    if SPLIT and canonical:
+        seo = (f'<link rel="canonical" href="{canonical}">\n'
+               f'<meta property="og:url" content="{canonical}">')
+    else:
+        seo = '<meta name="robots" content="noindex, nofollow">'
     return f"""<!doctype html>
 <html lang="ru">
 <head>
@@ -280,6 +295,7 @@ def head(title: str, desc: str, base: str = "", sticky: bool = False) -> str:
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title}</title>
 <meta name="description" content="{desc}">
+{seo}
 <meta name="theme-color" content="#FBF9F5">
 <meta property="og:type" content="website">
 <meta property="og:title" content="{title}">
@@ -432,7 +448,8 @@ def build_index() -> str:
         f"Туры в {CITY['name']} из {CITY['from']} — ДАЛЬТУР",
         f"Туры в {CITY['name']} из {CITY['from']} от {first} до {last} дней. "
         f"Программа по дням, выезды ежедневно. "
-        f"Звоните {PHONE_MAIN_HUMAN} или пишите в WhatsApp.")
+        f"Звоните {PHONE_MAIN_HUMAN} или пишите в WhatsApp.",
+        canonical=canon("main"))
         + header() + f"""
 <main id="main">
 
@@ -573,7 +590,8 @@ def build_page(pg: dict) -> str:
 
     vids = "\n".join(vcard(*v) for v in pg["videos"])
 
-    return (head(pg["title"], pg["desc"]) + header() + f"""
+    key = "stoma" if pg["slug"].startswith("stoma") else "lech"
+    return (head(pg["title"], pg["desc"], canonical=canon(key)) + header() + f"""
 <main id="main">
 
   <section class="hero hero--lean">
@@ -669,7 +687,7 @@ def build_tour(d: int, n: int) -> str:
         f"Тур в {CITY['name']} {lbl} из {CITY['from']} — ДАЛЬТУР",
         f"Тур в {CITY['name']} на {lbl} из {CITY['from']}: программа по дням, "
         f"выезды ежедневно. Стоимость уточняйте по телефону {PHONE_MAIN_HUMAN}.",
-        sticky=True)
+        sticky=True, canonical=canon("main", slug(d)))
         + header() + f"""
 <main id="main">
 
@@ -795,6 +813,20 @@ def build_dist() -> list:
 
         # GitHub Pages иначе прогонит файлы через Jekyll
         open(os.path.join(root, ".nojekyll"), "w").close()
+
+        # sitemap и robots — чтобы поисковики сразу нашли все страницы.
+        # Host: не пишем: Яндекс отказался от директивы в 2018, главное зеркало
+        # теперь определяется по canonical и редиректам.
+        urls = ([canon("main")] + [canon("main", slug(d)) for d, _ in TOURS]
+                if key == "main" else [canon(key)])
+        today = __import__("datetime").date.today().isoformat()
+        sm = "".join(f"  <url><loc>{u}</loc><lastmod>{today}</lastmod></url>\n" for u in urls)
+        with open(os.path.join(root, "sitemap.xml"), "w", encoding="utf-8") as fh:
+            fh.write('<?xml version="1.0" encoding="UTF-8"?>\n'
+                     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+                     f"{sm}</urlset>\n")
+        with open(os.path.join(root, "robots.txt"), "w", encoding="utf-8") as fh:
+            fh.write(f"User-agent: *\nAllow: /\n\nSitemap: https://{host}/sitemap.xml\n")
 
     return out
 
