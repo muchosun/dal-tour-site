@@ -28,15 +28,34 @@ python3 build.py --split
 
 ## Репозитории
 
-Создаются под каждый домен, ветка `main`, Pages из корня.
+Созданы 28.09, ветка `main`, Pages из корня, публичные.
 
-| Репозиторий | Домен |
-|---|---|
-| `hunchun-hunchun` | `hunchun-hunchun.ru` |
-| `hunchun-dental` | `dental.hunchun-hunchun.ru` |
-| `hunchun-clinic` | `clinic.hunchun-hunchun.ru` |
+| Репозиторий | Домен | Состояние |
+|---|---|---|
+| `hunchun-hunchun` | `hunchun-hunchun.ru` | залит, Pages включён, ждёт DNS |
+| `hunchun-dental` | `dental.hunchun-hunchun.ru` | залит, Pages включён, ждёт DNS |
+| `hunchun-clinic` | `clinic.hunchun-hunchun.ru` | залит, Pages включён, ждёт DNS |
 
-На бесплатном тарифе Pages работает только из публичного репозитория.
+**Пока DNS нет, сайты недоступны и это нормально.** В каждом репозитории лежит
+`CNAME`, поэтому Pages отдаёт их только по своему домену, а адрес вида
+`muchosun.github.io/hunchun-hunchun/` редиректит на него же. Домен не
+резолвится — открыть нельзя.
+
+Показывать заказчику до настройки DNS нужно staging:
+`muchosun.github.io/dal-tour-site/hunchun/` — там относительные ссылки и всё
+открывается.
+
+### Обновление после правок
+
+```bash
+cd site/hunchun && python3 build.py --split
+cd dist/main  && git add -A && git commit -m "..." && git push
+cd ../stoma   && git add -A && git commit -m "..." && git push
+cd ../lech    && git add -A && git commit -m "..." && git push
+```
+
+`dist/` пересоздаётся с нуля при каждой сборке, но `.git` внутри каждой папки
+сохраняется — история не теряется.
 
 ## Что показал whois
 

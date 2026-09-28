@@ -680,8 +680,17 @@ def build_tour(d: int, n: int) -> str:
 def build_dist() -> list:
     """Три отдельных корня под три домена: у каждого свой CNAME."""
     out = []
-    if os.path.isdir(DIST):
-        shutil.rmtree(DIST)
+
+    def clean(root: str) -> None:
+        """Чистим только сгенерированное. .git внутри трогать нельзя —
+        каждая папка dist/* это рабочая копия своего репозитория."""
+        if not os.path.isdir(root):
+            return
+        for name in os.listdir(root):
+            if name == ".git":
+                continue
+            path = os.path.join(root, name)
+            shutil.rmtree(path) if os.path.isdir(path) else os.remove(path)
 
     plan = [
         ("main", HOSTS["main"], None),
@@ -691,7 +700,8 @@ def build_dist() -> list:
 
     for key, host, pg in plan:
         root = os.path.join(DIST, key)
-        os.makedirs(root)
+        os.makedirs(root, exist_ok=True)
+        clean(root)
         shutil.copytree(os.path.join(HERE, "assets"), os.path.join(root, "assets"))
 
         with open(os.path.join(root, "CNAME"), "w", encoding="utf-8") as fh:
