@@ -1134,17 +1134,11 @@ a.video:hover .video__play { color: var(--red); }
   .hero--lean { padding-top: 48px; }
   .hero--lean h1 { font-size: 40px; }
   .marks { flex-direction: row; gap: 32px; }
-  .contacts {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 28px 32px;
-    gap: 32px;
-  }
-  .contacts__text { flex: 1 1 auto; }
+  /* Три кнопки занимают ~740 px — в строку с текстом влезают только на
+     широком экране. До него текст сверху, кнопки под ним с переносом. */
+  .contacts { padding: 28px 32px; gap: 22px; }
   .contacts__text b { font-size: 22px; }
-  .contacts__actions { flex: 0 0 auto; flex-wrap: nowrap; }
-  .contacts__actions .btn { flex: 0 0 auto; }
+  .contacts__actions .btn { flex: 0 1 auto; }
   .facts--pair { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 640px; }
 }
 
@@ -1274,3 +1268,10 @@ a.video:hover .video__play { color: var(--red); }
   display: block;
 }
 .video--thumb .video__frame, .video.is-playing .video__frame { position: relative; }
+
+/* Контакты в одну строку — только когда кнопкам и тексту хватает места */
+@media (min-width: 1360px) {
+  .contacts { flex-direction: row; align-items: center; justify-content: space-between; gap: 32px; }
+  .contacts__text { flex: 1 1 auto; min-width: 0; }
+  .contacts__actions { flex: 0 0 auto; flex-wrap: nowrap; }
+}
