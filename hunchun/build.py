@@ -106,6 +106,24 @@ PAGES = [
                     "video-lech-2", 1108, "oy0Z1aSYKAAA")],
         "wa": "Здравствуйте! Интересует лечение в Хуньчуне.",
     },
+    {
+        # M2: отдельный запрос «лечение в Китае». Живёт на clinic. рядом с
+        # «Лечением в Хуньчуне». Пока заготовка: текст пришлёт заказчик,
+        # до этого страница закрыта от индексации и не попадает в sitemap.
+        # Видео не ставим — просьба заказчика.
+        "slug": "lechenie-v-kitae.html",
+        "key": "lech",
+        "path": "lechenie-v-kitae.html",
+        "draft": True,
+        "nav": "Лечение в Китае",
+        "content": "lechenie-v-kitae.md",
+        "title": "Лечение в Китае из Владивостока | ДАЛЬТУР",
+        "desc": "Лечение в Китае из Владивостока: клиники, процедуры и "
+                "организация поездки с ДАЛЬТУР.",
+        "imgs": [],
+        "videos": [],
+        "wa": "Здравствуйте! Интересует лечение в Китае.",
+    },
 ]
 
 
@@ -308,12 +326,12 @@ def inline_css() -> str:
 
 
 def head(title: str, desc: str, base: str = "", sticky: bool = False,
-         canonical: str = "") -> str:
+         canonical: str = "", noindex: bool = False) -> str:
     # Превью (staging на github.io) закрываем от индексации целиком: иначе
     # после запуска это полная копия боевого сайта на чужом адресе.
     # В боевой сборке каждая страница указывает свой канонический адрес —
     # по нему же будет ссылаться зеркало на .рф.
-    if SPLIT and canonical:
+    if SPLIT and canonical and not noindex:
         seo = (f'<link rel="canonical" href="{canonical}">\n'
                f'<meta property="og:url" content="{canonical}">')
     else:
@@ -617,9 +635,28 @@ def build_page(pg: dict) -> str:
         </a>"""
 
     vids = "\n".join(vcard(*v) for v in pg["videos"])
+    video_block = f"""
+  <section class="section" id="video">
+    <div class="wrap">
+      <div class="section__head"><h2>Видео</h2></div>
+      <div class="videos">
+{vids}
+      </div>
+    </div>
+  </section>
+""" if vids else ""
+    gallery_block = f"""
+  <section class="section">
+    <div class="wrap">
+      <div class="gallery">
+{shots}      </div>
+    </div>
+  </section>
+""" if shots else ""
 
-    key = "stoma" if pg["slug"].startswith("stoma") else "lech"
-    return (head(pg["title"], pg["desc"], canonical=canon(key)) + header() + f"""
+    key = pg.get("key") or ("stoma" if pg["slug"].startswith("stoma") else "lech")
+    return (head(pg["title"], pg["desc"], canonical=canon(key, pg.get("path", "")),
+                 noindex=pg.get("draft", False)) + header() + f"""
 <main id="main">
 
   <section class="hero hero--lean">
@@ -640,22 +677,7 @@ def build_page(pg: dict) -> str:
     </div>
   </section>
 
-  <section class="section" id="video">
-    <div class="wrap">
-      <div class="section__head"><h2>Видео</h2></div>
-      <div class="videos">
-{vids}
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="wrap">
-      <div class="gallery">
-{shots}      </div>
-    </div>
-  </section>
-
+{video_block}{gallery_block}
   <section class="section">
     <div class="wrap">
       <div class="notice">
@@ -837,7 +859,11 @@ def build_dist() -> list:
         else:
             with open(os.path.join(root, "index.html"), "w", encoding="utf-8") as fh:
                 fh.write(build_page(pg))
-            out.append(f"dist/{key}/ — {host}, 1 страница")
+            extra = [p for p in PAGES if p.get("key") == key and p.get("path")]
+            for p in extra:
+                with open(os.path.join(root, p["path"]), "w", encoding="utf-8") as fh:
+                    fh.write(build_page(p))
+            out.append(f"dist/{key}/ — {host}, {1 + len(extra)} стр.")
 
         # GitHub Pages иначе прогонит файлы через Jekyll
         open(os.path.join(root, ".nojekyll"), "w").close()
@@ -846,7 +872,9 @@ def build_dist() -> list:
         # Host: не пишем: Яндекс отказался от директивы в 2018, главное зеркало
         # теперь определяется по canonical и редиректам.
         urls = ([canon("main")] + [canon("main", slug(d)) for d, _ in TOURS]
-                if key == "main" else [canon(key)])
+                if key == "main" else
+                [canon(key)] + [canon(key, p["path"]) for p in PAGES
+                                if p.get("key") == key and p.get("path") and not p.get("draft")])
         today = __import__("datetime").date.today().isoformat()
         sm = "".join(f"  <url><loc>{u}</loc><lastmod>{today}</lastmod></url>\n" for u in urls)
         with open(os.path.join(root, "sitemap.xml"), "w", encoding="utf-8") as fh:
