@@ -117,9 +117,10 @@ PAGES = [
         "draft": True,
         "nav": "Лечение в Китае",
         "content": "lechenie-v-kitae.md",
-        "title": "Лечение в Китае из Владивостока | ДАЛЬТУР",
-        "desc": "Лечение в Китае из Владивостока: клиники, процедуры и "
-                "организация поездки с ДАЛЬТУР.",
+        # «лечение в Китае» — широкий ключ, без города (голосовые 633722–23)
+        "title": "Лечение в Китае | ДАЛЬТУР",
+        "desc": "Лечение в Китае: клиники, процедуры, цены и организация "
+                "поездки с ДАЛЬТУР.",
         "imgs": [],
         "videos": [],
         "wa": "Здравствуйте! Интересует лечение в Китае.",
@@ -420,8 +421,11 @@ def header(base: str = "") -> str:
     <a href="{site_url("stoma")}">Стоматология</a>
     <a href="{site_url("lech")}">Лечение</a>
     <a href="{site_url("main", "#kontakty")}">Контакты</a>
-    <a class="drawer__phone" href="tel:{PHONE_MAIN_TEL}">{PHONE_MAIN_HUMAN}</a>
-    <a href="{TG_LINK}">Telegram</a>
+    <div class="drawer__contacts">
+      <a class="btn btn--primary" href="{wa_href}" target="_blank" rel="noopener">{IC_WA} Спросить в WhatsApp</a>
+      <a class="btn btn--ghost" href="{TG_LINK}" target="_blank" rel="noopener">{IC_TG} Спросить в Telegram</a>
+      <a class="btn btn--ghost btn--tel" href="tel:{PHONE_MAIN_TEL}">{IC_PHONE} {PHONE_MAIN_HUMAN}</a>
+    </div>
   </nav>
 </div>
 """

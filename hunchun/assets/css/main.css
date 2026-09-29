@@ -292,12 +292,10 @@ button { font: inherit; }
   border-bottom: 1px solid var(--line);
 }
 .drawer__panel a:last-child { border-bottom: 0; }
-.drawer__phone {
-  margin-top: 16px;
-  font-family: var(--display);
-  font-size: 18px;
-  font-weight: 600;
-}
+/* C3 в мобильном меню: WhatsApp → Telegram → телефон (голосовое 633721) */
+.drawer__contacts { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+.drawer__panel .drawer__contacts a { min-height: 52px; justify-content: center; font-size: 16px; font-weight: 600; border-bottom: 1px solid var(--line-strong); }
+.drawer__panel .drawer__contacts .btn--primary { color: #fff; border-bottom: 0; }
 
 /* ---------- герой ---------- */
 
