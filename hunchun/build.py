@@ -517,11 +517,10 @@ def build_index() -> str:
 
   <section class="section" id="o-gorode">
     <div class="wrap">
-      <div class="section__head"><h2>О городе</h2></div>
-      <p style="margin-top:14px;max-width:780px;font-size:15px;line-height:1.65;color:var(--muted)">
-        [ТЕКСТ О ГОРОДЕ {CITY['name'].upper()} — 2–3 абзаца, пришлёт заказчик или копируем с dal-tour.ru.
-        Что за город, чем интересен, сколько ехать из {CITY['from']}, что обычно смотрят.]
-      </p>
+      <div class="section__head"><h2>{render_md("o-gorode.md")[0] or "О городе"}</h2></div>
+      <div class="prose" style="margin-top:14px">
+        {render_md("o-gorode.md")[1]}
+      </div>
     </div>
   </section>
 """
