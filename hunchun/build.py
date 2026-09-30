@@ -728,15 +728,86 @@ def build_page(pg: dict) -> str:
 
 # ---------------------------------------------------------------- страница тура
 
+
+# ---------------------------------------------------------------- тексты туров
+
+# Тексты туров от заказчика лежат как есть: content/tours/<город>/<дней>.txt
+# (город — ключ DEPARTURES). Формат — как он присылает в Telegram:
+# вступление, «Программа тура…», «N день — …», экскурсии «… — примерно N
+# юаней», заключение. Контактные строки (☎️, «Звонки + WhatsApp») пропускаем —
+# на странице свои блоки контактов.
+DAY_RE = re.compile(r"^(\d+) день — (.+)$")
+PRICE_RE = re.compile(r"^(.+?) — (примерно .+)$")
+SKIP = ("ДАЛЬТУР", "☎️", "Звонки + WhatsApp")
+
+
+def tour_text(d: int) -> dict | None:
+    path = os.path.join(HERE, "content", "tours", DEP, f"{d}.txt")
+    if not os.path.exists(path):
+        return None
+    lines = [l.strip() for l in pathlib.Path(path).read_text(encoding="utf-8").splitlines() if l.strip()]
+    t = {"intro_h": "", "intro": [], "days": [], "exc_h": "", "exc_intro": [],
+         "exc": [], "exc_note": "", "outro_h": "", "outro": []}
+    part = "title"
+    for l in lines:
+        if l.startswith(SKIP) and not l.startswith("ДАЛЬТУР —") and part != "days":
+            continue
+        if l.startswith("ДАЛЬТУР —"):          # подпись в конце
+            continue
+        if part == "title":
+            part = "intro_h0"; continue
+        if part == "intro_h0":
+            t["intro_h"] = l; part = "intro"; continue
+        if l.startswith("Программа тура"):
+            part = "days"; continue
+        m = DAY_RE.match(l)
+        if m and part in ("days",):
+            t["days"].append([m.group(2), []]); continue
+        if l.startswith("Экскурсии за дополнительную плату"):
+            t["exc_h"] = l; part = "exc"; continue
+        if part == "exc" and l.startswith("Важно:"):
+            t["exc_note"] = l; part = "outro_h0"; continue
+        if part == "outro_h0":
+            t["outro_h"] = l; part = "outro"; continue
+        if part == "intro":
+            t["intro"].append(l)
+        elif part == "days" and t["days"]:
+            t["days"][-1][1].append(l)
+        elif part == "exc":
+            pm = PRICE_RE.match(l)
+            (t["exc"].append((pm.group(1), pm.group(2))) if pm else t["exc_intro"].append(l))
+        elif part == "outro":
+            t["outro"].append(l)
+    if len(t["days"]) != d:
+        raise SystemExit(f"{path}: дней в тексте {len(t['days'])}, а в туре {d}")
+    return t
+
+
 def build_tour(d: int, n: int) -> str:
     lbl = label(d, n)
     wa_text = (f"Здравствуйте! Интересует тур в {CITY['name']} на {lbl}. "
                f"Подскажите ближайшие даты и стоимость.")
 
+    text = tour_text(d)
+
     # G1, G2: «Первый день» вместо цифры
     days = []
     for i in range(1, d + 1):
         dep = DEPARTURES[DEP]
+        if text:
+            title, rows = text["days"][i - 1]
+            title = title[:1].upper() + title[1:]
+            body = "\n          ".join(
+                f'<p class="day__note">{esc(r)}</p>' if r.startswith("Экскурсии и шопинг")
+                else f"<p>{esc(r)}</p>" for r in rows)
+            days.append(f"""        <article class="day">
+          <div class="day__head">
+            <span class="day__ord">{ORDINALS[i]} день</span>
+            <h3 class="day__title">{esc(title)}</h3>
+          </div>
+          {body}
+        </article>""")
+            continue
         if i == 1:
             title = f"{dep['route_there']} — {CITY['name']}"
             body = (f"[ВЫЕЗД из {dep['from']}, пункт пропуска, прибытие в "
@@ -758,6 +829,44 @@ def build_tour(d: int, n: int) -> str:
 
     videos = video_cards(d)
 
+    intro_block = exc_block = outro_block = ""
+    if text:
+        intro_block = f"""
+  <section class="section section--tight">
+    <div class="wrap">
+      <div class="prose">
+        <h2>{esc(text["intro_h"])}</h2>
+        {"".join(f"<p>{esc(p)}</p>" for p in text["intro"])}
+      </div>
+    </div>
+  </section>
+"""
+        items = "\n".join(
+            f'          <li><span>{esc(name)}</span><b>{esc(price)}</b></li>'
+            for name, price in text["exc"])
+        exc_block = f"""
+  <section class="section" id="ekskursii">
+    <div class="wrap">
+      <div class="section__head"><h2>{esc(text["exc_h"])}</h2></div>
+      {"".join(f'<p class="section__lead">{esc(p)}</p>' for p in text["exc_intro"])}
+      <ul class="excursions">
+{items}
+      </ul>
+      <p class="excursions__note">{esc(text["exc_note"])}</p>
+    </div>
+  </section>
+"""
+        outro_block = f"""
+  <section class="section">
+    <div class="wrap">
+      <div class="prose">
+        <h2>{esc(text["outro_h"])}</h2>
+        {"".join(f"<p>{esc(p)}</p>" for p in text["outro"])}
+      </div>
+    </div>
+  </section>
+"""
+
     others = "\n".join(
         f'        <a class="pill" href="{tour_url(od)}">{label(od, on)}</a>'
         for od, on in TOURS if od != d)
@@ -778,7 +887,7 @@ def build_tour(d: int, n: int) -> str:
       </nav>
 
       <div class="tour-head__row">
-        <h1>Тур в {CITY['name']}<br>{lbl}</h1>
+        <h1>Тур в {CITY['name']} из {CITY['from']}<br>{lbl}</h1>
         <span class="tour-head__hiero" lang="zh" aria-hidden="true">{CITY['hiero']}</span>
       </div>
 
@@ -795,7 +904,7 @@ def build_tour(d: int, n: int) -> str:
       </dl>
     </div>
   </section>
-
+{intro_block}
   <section class="section" id="programma">
     <div class="wrap">
       <div class="section__head"><h2>Программа тура в {CITY['name']}</h2></div>
@@ -809,7 +918,7 @@ def build_tour(d: int, n: int) -> str:
         + contacts("Остались вопросы? Рады вас проконсультировать",
                    "Ответим в рабочее время: ПН–ПТ 10:00–18:00.",
                    wa_text)
-        + f"""
+        + exc_block + f"""
   <section class="section" id="video">
     <div class="wrap">
       <div class="section__head"><h2>Экскурсии на видео</h2></div>
@@ -823,7 +932,7 @@ def build_tour(d: int, n: int) -> str:
         + contacts("Всегда рады вас проконсультировать",
                    "Подберём даты и посчитаем стоимость.",
                    wa_text)
-        + f"""
+        + outro_block + f"""
   <section class="section" id="drugie">
     <div class="wrap">
       <div class="section__head"><h2>Туры в {CITY['name']} на</h2></div>

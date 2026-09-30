@@ -1289,6 +1289,8 @@ a.video__frame:hover .video__play { color: var(--red); }
 /* 320 px: номер телефона в кнопке не помещался в поля тёмного блока */
 @media (max-width: 359px) {
   .contacts { padding-left: 14px; padding-right: 14px; }
+  /* заголовок тура с городом отправления длиннее — иероглифам места нет */
+  .tour-head__hiero { display: none; }
 }
 
 /* Иконки сервисов (Arcticons): в верхней полосе — значок и название */
@@ -1298,3 +1300,36 @@ a.video__frame:hover .video__play { color: var(--red); }
 .footer__social a svg { display: block; }
 .footer__social a:hover { color: var(--red-deep); }
 .footer__legal a { color: inherit; text-decoration: underline; }
+
+/* Тексты туров от заказчика: программа по дням */
+.day p + p { margin-top: 6px; }
+.day .day__note {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--muted-3);
+}
+
+/* Экскурсии за доплату: название слева, цена справа */
+.section__lead { margin-top: 10px; max-width: 780px; font-size: 15px; line-height: 1.6; color: var(--muted); }
+.excursions {
+  margin-top: 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.excursions li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.excursions li + li { border-top: 1px solid var(--line); }
+.excursions b { font-weight: 600; color: var(--ink); white-space: nowrap; }
+.excursions__note { margin-top: 12px; font-size: 13px; line-height: 1.5; color: var(--muted-3); }
+@media (min-width: 768px) {
+  .excursions li { flex-direction: row; justify-content: space-between; align-items: baseline; gap: 24px; padding: 14px 20px; }
+  .excursions b { flex: none; }
+}
