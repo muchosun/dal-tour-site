@@ -241,21 +241,21 @@ def tour_url(d: int, base: str = "") -> str:
 
 # H1–H4: видео экскурсий на страницах туров, одинаковые для всех
 # длительностей. Порядок — как у заказчика (633828): приезд, гостиница,
-# экскурсии, еда, чайная церемония. Подписи — названия с «Хуньчунем» для
-# поиска (633829). Формат как у PAGES["videos"]:
+# экскурсии, еда, чайная церемония. Подписи — «тема — туры в Хуньчунь»,
+# так просил заказчик для поиска (633829), в том числе у стеклянного моста. Формат как у PAGES["videos"]:
 # (подпись, страница на Дзене, превью в assets/img, секунды, embed-id).
 TOUR_VIDEOS = [
-    ("Владивосток — Хуньчунь на автобусе",
+    ("Дорога из Владивостока на автобусе — туры в Хуньчунь",
      "https://dzen.ru/video/watch/695a3c5f86ae062350c7f467", "video-tour-1", 743, "oy0b1CCQKAAA"),
-    ("Гостиницы в Хуньчуне",
+    ("Гостиницы — туры в Хуньчунь",
      "https://dzen.ru/video/watch/695b90a7d6e03c1d0079b0ec", "video-tour-2", 3461, "oy0ZqQScKAAA"),
-    ("Большой Будда в Дуньхуа — экскурсия из Хуньчуня",
+    ("Большой Будда в Дуньхуа — туры в Хуньчунь",
      "https://dzen.ru/video/watch/695b130f2e2b4a128b7c39d7", "video-tour-3", 3247, "oy0YCACYKAAA"),
-    ("Стеклянный мост в Яньцзи — экскурсия из Хуньчуня",
+    ("Стеклянный мост — туры в Хуньчунь",
      "https://dzen.ru/video/watch/68102f027535b749adb6df14", "video-tour-4", 1631, "oy0aA8-0IAAA"),
-    ("Рестораны в Хуньчуне и цены",
+    ("Рестораны и цены — туры в Хуньчунь",
      "https://dzen.ru/video/watch/695b90d3b2bf8e79dd527604", "video-tour-5", 2081, "oy0YQQicKAAA"),
-    ("Чайная церемония в Хуньчуне",
+    ("Чайная церемония — туры в Хуньчунь",
      "https://dzen.ru/video/watch/695b0adbe8b4617811c49770", "video-tour-6", 1267, "oy0bi-SUKAAA"),
 ]
 
@@ -481,8 +481,8 @@ def footer(base: str = "", tail: str = "") -> str:
 
     <p class="footer__legal">
       Информация на сайте носит информационный характер и не является публичной офертой (ст. 437 ГК РФ).
-      Стоимость тура зависит от дат выезда, категории отеля и количества дней — уточняйте у менеджера
-      по телефону {PHONE_MAIN_HUMAN} или в WhatsApp.
+      Стоимость тура зависит от даты выезда, категории отеля 3*, 4*, 5* и количества дней — уточняйте
+      у менеджера по телефону {PHONE_MAIN_HUMAN} или в WhatsApp.
       <br>© <span data-year>2026</span> ДАЛЬТУР.
     </p>
   </div>
@@ -510,7 +510,7 @@ def build_index() -> str:
     return (head(
         f"Туры в {CITY['name']} из {CITY['from']} — ДАЛЬТУР",
         f"Туры в {CITY['name']} из {CITY['from']} от {first} до {last} дней. "
-        f"Программа по дням, выезды ежедневно. "
+        f"Программа тура, выезды ежедневно. "
         f"Звоните {PHONE_MAIN_HUMAN} или пишите в WhatsApp.",
         canonical=canon("main"))
         + header() + f"""
@@ -629,9 +629,13 @@ def build_page(pg: dict) -> str:
     shots = ""
     for i, name in enumerate(pg["imgs"]):
         img = picture(name, f"{h1}, фотография {i + 1}", "", w=1600, h=1067)
-        shots += (f'        <div class="gallery__item">{img}</div>\n' if img else
-                  f'        <div class="gallery__item gallery__item--empty">'
-                  f'<span>[ФОТОГРАФИЯ {i + 1} — пришлёт заказчик]</span></div>\n')
+        # пустое место под фото показываем только в превью: на боевом домене
+        # посетитель не должен видеть «[ФОТОГРАФИЯ — пришлёт заказчик]»
+        if img:
+            shots += f'        <div class="gallery__item">{img}</div>\n'
+        elif not SPLIT:
+            shots += (f'        <div class="gallery__item gallery__item--empty">'
+                      f'<span>[ФОТОГРАФИЯ {i + 1} — пришлёт заказчик]</span></div>\n')
 
     # embed-id Дзен отдаёт в <meta name="twitter:player:stream"> страницы ролика
     vids = "\n".join(vcard(*v) for v in pg["videos"])
