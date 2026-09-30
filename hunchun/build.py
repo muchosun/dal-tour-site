@@ -38,7 +38,7 @@ DEPARTURES = {
              "draft": False},
     "us": {"host": "ussuriysk.hunchun-hunchun.ru", "from": "Уссурийска", "from_gen": "Уссурийск",
            "to_acc": "в Уссурийск", "route_there": "Уссурийск", "route_back": "Уссурийск",
-           "draft": True},
+           "draft": False},   # 30.09: все 10 туров и SEO-статья от заказчика
     # из Хабаровска — свой автобус до Уссурийска, там пересадка
     "hb": {"host": "habarovsk.hunchun-hunchun.ru", "from": "Хабаровска", "from_gen": "Хабаровск",
            "to_acc": "в Хабаровск", "route_there": "Хабаровск — Уссурийск",
@@ -522,8 +522,38 @@ def build_index() -> str:
 
     first, last = TOURS[0][0], TOURS[-1][0]
 
+    # SEO-статья под город отправления (633955): content/city/<город>.md,
+    # Title и Description — content/city/<город>.meta.json. Нет статьи —
+    # общий блок «О городе».
+    city_md = os.path.join(HERE, "content", "city", f"{DEP}.md")
+    city_meta = os.path.join(HERE, "content", "city", f"{DEP}.meta.json")
+    meta = __import__("json").load(open(city_meta, encoding="utf-8")) if os.path.exists(city_meta) else {}
+    if os.path.exists(city_md):
+        _, art = render_md(os.path.join("city", f"{DEP}.md"))
+        city_block = f"""
+  <section class="section" id="o-gorode">
+    <div class="wrap">
+      <div class="prose prose--city">
+        {art}
+      </div>
+    </div>
+  </section>
+"""
+    else:
+        city_block = f"""
+  <section class="section" id="o-gorode">
+    <div class="wrap">
+      <div class="section__head"><h2>{render_md("o-gorode.md")[0] or "О городе"}</h2></div>
+      <div class="prose" style="margin-top:14px">
+        {render_md("o-gorode.md")[1]}
+      </div>
+    </div>
+  </section>
+"""
+
     return (head(
-        f"Туры в {CITY['name']} из {CITY['from']} — ДАЛЬТУР",
+        meta.get("title") or f"Туры в {CITY['name']} из {CITY['from']} — ДАЛЬТУР",
+        meta.get("desc") or
         f"Туры в {CITY['name']} из {CITY['from']} от {first} до {last} дней. "
         f"Программа тура, выезды ежедневно. "
         f"Звоните {PHONE_MAIN_HUMAN} или пишите в WhatsApp.",
@@ -564,15 +594,7 @@ def build_index() -> str:
     </div>
   </section>
 
-  <section class="section" id="o-gorode">
-    <div class="wrap">
-      <div class="section__head"><h2>{render_md("o-gorode.md")[0] or "О городе"}</h2></div>
-      <div class="prose" style="margin-top:14px">
-        {render_md("o-gorode.md")[1]}
-      </div>
-    </div>
-  </section>
-"""
+{city_block}"""
         # D4, D6: «рады проконсультировать», без оговорки про праздники (D5)
         + contacts(
             "Всегда рады вас проконсультировать в WhatsApp",
@@ -600,6 +622,8 @@ def render_md(name: str) -> tuple:
             continue
         if b.startswith("# "):
             h1 = esc(b[2:].strip())
+        elif b.startswith("### "):
+            parts.append(f"<h3>{esc(b[4:].strip())}</h3>")
         elif b.startswith("## "):
             parts.append(f"<h2>{esc(b[3:].strip())}</h2>")
         elif b.startswith("- "):
@@ -906,7 +930,7 @@ def build_tour(d: int, n: int) -> str:
       <dl class="facts facts--three">
         <div class="fact"><dt>Длительность</dt><dd>{lbl}</dd></div>
         <div class="fact"><dt>Питание</dt><dd>Завтраки</dd></div>
-        <div class="fact fact--gift"><dt>Экскурсии в подарок</dt><dd>Чайная церемония и кулинарное шоу</dd></div>
+        <div class="fact fact--gift"><dt>Экскурсии в подарок</dt><dd>Чайная церемония и<br>кулинарное шоу</dd></div>
       </dl>
     </div>
   </section>

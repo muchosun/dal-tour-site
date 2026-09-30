@@ -1341,3 +1341,8 @@ a.video__frame:hover .video__play { color: var(--red); }
   .facts--three { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 960px; }
   .facts--three .fact--gift { grid-column: auto; }
 }
+
+/* SEO-статья под город: подзаголовки и частые вопросы */
+.prose h3 { margin-top: 24px; font-size: 17px; font-weight: 600; line-height: 1.35; color: var(--ink); }
+.prose h3 + p { margin-top: 8px; }
+.prose--city > p:first-child { margin-top: 0; }
