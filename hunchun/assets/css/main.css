@@ -1290,3 +1290,11 @@ a.video__frame:hover .video__play { color: var(--red); }
 @media (max-width: 359px) {
   .contacts { padding-left: 14px; padding-right: 14px; }
 }
+
+/* Иконки сервисов (Arcticons): в верхней полосе — значок и название */
+.topbar__soc { display: inline-flex; align-items: center; gap: 6px; }
+.topbar__soc svg { flex: none; opacity: .9; }
+.footer__social { flex-wrap: wrap; }
+.footer__social a svg { display: block; }
+.footer__social a:hover { color: var(--red-deep); }
+.footer__legal a { color: inherit; text-decoration: underline; }

@@ -143,12 +143,12 @@ WA_NUMBER = "79644444144"
 TG_LINK = "https://t.me/daltourChina"     # C4: закрыто, ссылка от заказчика
 # Порядок от заказчика (633804, 633805): YouTube, Яндекс (Дзен), Rutube, VK,
 # Telegram. YouTube и Дзен — как на dal-tour.ru, Rutube прислал заказчик.
-# Третье поле — подпись на квадратной кнопке в подвале.
-SOCIALS = [("YouTube", "https://www.youtube.com/@DALTOUR", "YT"),
-           ("Дзен", "https://dzen.ru/daltour", "Дзен"),
-           ("Rutube", "https://rutube.ru/channel/54520250/", "RT"),
-           ("VK", "https://vk.com/daltour", "VK"),
-           ("Telegram", TG_LINK, "TG")]
+# Третье поле — ключ иконки в ARC.
+SOCIALS = [("YouTube", "https://www.youtube.com/@DALTOUR", "youtube"),
+           ("Дзен", "https://dzen.ru/daltour", "zen"),
+           ("Rutube", "https://rutube.ru/channel/54520250/", "rutube"),
+           ("VK", "https://vk.com/daltour", "vk"),
+           ("Telegram", TG_LINK, "telegram")]
 ADDRESS = "690091, Россия, г. Владивосток,<br>ул. Мордовцева 3, офис 705"
 HOURS = "ПН–ПТ 10:00–18:00, СБ–ВС выходной"
 
@@ -267,12 +267,25 @@ ORDINALS = ["", "Первый", "Второй", "Третий", "Четвёрт�
 
 # ---------------------------------------------------------------- иконки
 
-IC_WA = ('<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">'
-         '<path d="M2.5 15.5l1-3.3A6.3 6.3 0 1 1 6 15l-3.5.5z" stroke="currentColor"'
-         ' stroke-width="1.5" stroke-linejoin="round"/></svg>')
-IC_TG = ('<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">'
-         '<path d="M1.8 8.4l13.4-5.2-2.3 12-4-3-2 2-.5-3.6 6.2-5.6-7.5 4.4-3.3-1z"'
-         ' stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>')
+# Иконки сервисов — один набор Arcticons (github.com/Arcticons-Team/Arcticons,
+# CC BY-SA 4.0, автор указан в подвале). Линейные, как остальные иконки сайта.
+# Сетка 48×48, толщину линии задаёт brand_icon().
+ARC = {
+    'youtube': '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M43.112 14.394a5 5 0 0 0-3.533-3.533c-2.314-.894-24.732-1.332-31.236.025A5 5 0 0 0 4.81 14.42c-1.045 4.583-1.124 14.491.026 19.177a5 5 0 0 0 3.533 3.533c4.583 1.055 26.371 1.203 31.236 0a5 5 0 0 0 3.533-3.533c1.114-4.993 1.193-14.287-.026-19.203"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M30.567 23.995L20.12 18.004v11.982Z"/>',
+    'zen': '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M24 3.5C24 18.457 29.653 24 44.5 24C29.568 24 24 29.657 24 44.5C24 29.59 18.457 24 3.5 24C18.457 24 24 18.373 24 3.5"/>',
+    'rutube': '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M13.5 14.203h16.86a3.624 3.624 0 0 1 3.622 3.623v4.658c0 2-1.623 3.623-3.623 3.623H13.5zm16.046 11.904l4.954 7.69m-21-7.69v7.69"/><rect width="37" height="37" x="5.5" y="5.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" rx="4" ry="4"/>',
+    'vk': '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M27.55 35.19v-6.64c4.46.68 5.87 4.19 8.71 6.64h7.24a29.36 29.36 0 0 0-7.9-10.47c2.6-3.58 5.36-6.95 6.71-12.06h-6.58c-2.58 3.91-3.94 8.49-8.18 11.51V12.66H18l2.28 2.82v10.05c-3.7-.43-6.2-7.2-8.91-12.87H4.5c2.5 7.66 7.76 24.47 23.05 22.53"/>',
+    'telegram': '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M40.83 8.48c1.14 0 2 1 1.54 2.86l-5.58 26.3c-.39 1.87-1.52 2.32-3.08 1.45L20.4 29.26a.4.4 0 0 1 0-.65l15.37-13.88c.7-.62-.15-.92-1.07-.36L15.41 26.54a.46.46 0 0 1-.4.05L6.82 24C5 23.47 5 22.22 7.23 21.33L40 8.69a2.2 2.2 0 0 1 .83-.21"/>',
+    'whatsapp': '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M24 2.5c-11.885.013-21.51 9.658-21.497 21.543A21.5 21.5 0 0 0 5.15 34.36L3.5 44.5l10.14-1.65c10.41 5.71 23.48 1.901 29.19-8.51s1.902-23.479-8.509-29.19a21.5 21.5 0 0 0-10.32-2.65Zm-10.75 9.77h5.86a1 1 0 0 1 1 1a10.4 10.4 0 0 0 .66 3.91a1.93 1.93 0 0 1-.66 2.44l-2.05 2a18.6 18.6 0 0 0 3.52 4.79A18.6 18.6 0 0 0 26.35 30l2-2.05c1-1 1.46-1 2.44-.66a10.4 10.4 0 0 0 3.91.66a1.05 1.05 0 0 1 1 1v5.86a1.05 1.05 0 0 1-1 1a23.68 23.68 0 0 1-15.64-6.84a23.6 23.6 0 0 1-6.84-15.64a1.07 1.07 0 0 1 1.03-1.06"/>',
+}
+
+
+def brand_icon(key: str, size: int = 18, stroke: float = 3.2) -> str:
+    return (f'<svg width="{size}" height="{size}" viewBox="0 0 48 48" '
+            f'stroke-width="{stroke}" aria-hidden="true">{ARC[key]}</svg>')
+
+IC_WA = brand_icon("whatsapp")
+IC_TG = brand_icon("telegram")
 IC_PHONE = ('<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">'
             '<path d="M3 3.5h3l1.2 3-1.6 1.2a9 9 0 0 0 4.7 4.7L11.5 11l3 1.2v3a13 13 0'
             ' 0 1-11.5-11.7z" stroke="currentColor" stroke-width="1.4"'
@@ -384,7 +397,7 @@ def header(base: str = "") -> str:
     <div class="topbar__right">
       <span class="topbar__hours">{HOURS}</span>
       <span class="topbar__sep" aria-hidden="true">|</span>
-      {' '.join(f'<a href="{u}" target="_blank" rel="noopener">{n}</a>' for n, u, _ in SOCIALS)}
+      {' '.join(f'<a class="topbar__soc" href="{u}" target="_blank" rel="noopener">{brand_icon(k, 15, 3.4)}{n}</a>' for n, u, k in SOCIALS)}
     </div>
   </div>
 </div>
@@ -451,8 +464,8 @@ def footer(base: str = "", tail: str = "") -> str:
     # C5: городские номера внизу
     phones = "\n".join(f'          <a href="tel:{t}">{h}</a>' for h, t in PHONES_EXTRA)
     socials = "\n".join(
-        f'          <a href="{u}" target="_blank" rel="noopener" aria-label="{n}">{short}</a>'
-        for n, u, short in SOCIALS)
+        f'          <a href="{u}" target="_blank" rel="noopener" aria-label="{n}" title="{n}">{brand_icon(k, 22, 2.8)}</a>'
+        for n, u, k in SOCIALS)
     return f"""
 <footer class="footer" id="kontakty">
   <div class="wrap">
@@ -483,7 +496,8 @@ def footer(base: str = "", tail: str = "") -> str:
       Информация на сайте носит информационный характер и не является публичной офертой (ст. 437 ГК РФ).
       Стоимость тура зависит от даты выезда, категории отеля 3*, 4*, 5* и количества дней — уточняйте
       у менеджера по телефону {PHONE_MAIN_HUMAN} или в WhatsApp.
-      <br>© <span data-year>2026</span> ДАЛЬТУР.
+      <br>© <span data-year>2026</span> ДАЛЬТУР. Иконки сервисов —
+      <a href="https://github.com/Arcticons-Team/Arcticons" target="_blank" rel="noopener">Arcticons</a>, CC BY-SA 4.0.
     </p>
   </div>
 </footer>
