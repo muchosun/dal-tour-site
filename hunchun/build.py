@@ -148,7 +148,7 @@ TG_LINK = "https://t.me/daltourChina"     # C4: закрыто, ссылка о�
 SOCIALS = [("YouTube", "https://www.youtube.com/@DALTOUR", "youtube"),
            ("Дзен", "https://dzen.ru/daltour", "zen"),
            ("Rutube", "https://rutube.ru/channel/54520250/", "rutube"),
-           ("VK", "https://vk.com/daltour", "vk"),
+           ("VK", "https://vk.ru/daltourvk", "vk"),   # ссылку дал Александр 30.09
            ("Telegram", TG_LINK, "telegram")]
 ADDRESS = "690091, Россия, г. Владивосток,<br>ул. Мордовцева 3, офис 705"
 HOURS = "ПН–ПТ 10:00–18:00, СБ–ВС выходной"
@@ -923,6 +923,7 @@ def build_dist() -> list:
 
     set_departure("main")
     out.append(build_mirror())
+    out.append(build_www())
     for key in OLD_HOSTS:
         out.append(build_old_redirect(key))
     return out
@@ -971,6 +972,33 @@ def build_mirror() -> str:
     with open(os.path.join(root, "robots.txt"), "w", encoding="utf-8") as fh:
         fh.write("User-agent: *\nAllow: /\n")
     return f"dist/rf/ — {MIRROR} → {HOSTS['main']}, {len(pages)} страниц-редиректов"
+
+
+def build_www() -> str:
+    """www.hunchun-hunchun.ru — отдельный репозиторий с перенаправлением на
+    корень. GitHub завис на выпуске общего сертификата «корень + www»
+    (статус dns_changed с 28.09); у отдельного адреса сертификат свой."""
+    root = os.path.join(DIST, "www")
+    os.makedirs(root, exist_ok=True)
+    for name in os.listdir(root):
+        if name != ".git":
+            path = os.path.join(root, name)
+            shutil.rmtree(path) if os.path.isdir(path) else os.remove(path)
+    main_root = f"https://{HOSTS['main']}"
+    pages = [("index.html", canon("main"))] + [(slug(d), canon("main", slug(d))) for d, _ in TOURS]
+    for name, target in pages:
+        with open(os.path.join(root, name), "w", encoding="utf-8") as fh:
+            fh.write(redirect_page(target))
+    with open(os.path.join(root, "404.html"), "w", encoding="utf-8") as fh:
+        fh.write(redirect_page(main_root + "/").replace(
+            f'location.replace("{main_root}/" + location.search + location.hash)',
+            f'location.replace("{main_root}" + location.pathname + location.search + location.hash)'))
+    with open(os.path.join(root, "CNAME"), "w", encoding="utf-8") as fh:
+        fh.write(f"www.{HOSTS['main']}\n")
+    open(os.path.join(root, ".nojekyll"), "w").close()
+    with open(os.path.join(root, "robots.txt"), "w", encoding="utf-8") as fh:
+        fh.write("User-agent: *\nAllow: /\n")
+    return f"dist/www/ — www.{HOSTS['main']} → {HOSTS['main']}"
 
 
 def build_old_redirect(key: str) -> str:
