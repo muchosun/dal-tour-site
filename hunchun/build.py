@@ -398,8 +398,6 @@ def header(base: str = "") -> str:
   <div class="wrap">
     <span>Выезды ежедневно</span>
     <div class="topbar__right">
-      <span class="topbar__hours">{HOURS}</span>
-      <span class="topbar__sep" aria-hidden="true">|</span>
       {' '.join(f'<a class="topbar__soc" href="{u}" target="_blank" rel="noopener">{brand_icon(k, 15, 3.4)}{n}</a>' for n, u, k in SOCIALS)}
     </div>
   </div>
@@ -739,13 +737,20 @@ def build_page(pg: dict) -> str:
 DAY_RE = re.compile(r"^(\d+) день — (.+)$")
 PRICE_RE = re.compile(r"^(.+?) — (примерно .+)$")
 SKIP = ("ДАЛЬТУР", "☎️", "Звонки + WhatsApp")
+# 633938: «дополнительные экскурсии — во множественном числе»
+PLURAL = [("другую дополнительную экскурсионную программу", "другие дополнительные экскурсионные программы"),
+          ("дополнительную экскурсионную программу", "дополнительные экскурсионные программы"),
+          ("дополнительную экскурсию", "дополнительные экскурсии")]
 
 
 def tour_text(d: int) -> dict | None:
     path = os.path.join(HERE, "content", "tours", DEP, f"{d}.txt")
     if not os.path.exists(path):
         return None
-    lines = [l.strip() for l in pathlib.Path(path).read_text(encoding="utf-8").splitlines() if l.strip()]
+    raw = pathlib.Path(path).read_text(encoding="utf-8")
+    for one, many in PLURAL:
+        raw = raw.replace(one, many)
+    lines = [l.strip() for l in raw.splitlines() if l.strip()]
     t = {"intro_h": "", "intro": [], "days": [], "exc_h": "", "exc_intro": [],
          "exc": [], "exc_note": "", "outro_h": "", "outro": []}
     part = "title"
@@ -898,9 +903,10 @@ def build_tour(d: int, n: int) -> str:
       </div>
 
       <!-- F1, F2: без «Дороги» и «Времени выезда». F3: только длительность и питание. -->
-      <dl class="facts facts--pair">
+      <dl class="facts facts--three">
         <div class="fact"><dt>Длительность</dt><dd>{lbl}</dd></div>
         <div class="fact"><dt>Питание</dt><dd>Завтраки</dd></div>
+        <div class="fact fact--gift"><dt>Экскурсии в подарок</dt><dd>Чайная церемония и кулинарное шоу</dd></div>
       </dl>
     </div>
   </section>
@@ -916,7 +922,8 @@ def build_tour(d: int, n: int) -> str:
 """
         # C6: после программы — телефон и мессенджеры
         + contacts("Остались вопросы? Рады вас проконсультировать",
-                   "Ответим в рабочее время: ПН–ПТ 10:00–18:00.",
+                   # 633931: «мы всегда отвечаем, если не спим» — без режима работы
+                   "Звоните или пишите в WhatsApp и Telegram.",
                    wa_text)
         + exc_block + f"""
   <section class="section" id="video">

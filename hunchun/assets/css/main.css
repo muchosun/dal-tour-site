@@ -1333,3 +1333,11 @@ a.video__frame:hover .video__play { color: var(--red); }
   .excursions li { flex-direction: row; justify-content: space-between; align-items: baseline; gap: 24px; padding: 14px 20px; }
   .excursions b { flex: none; }
 }
+
+/* Факты тура: длительность, питание и подарок (633934) */
+.facts--three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.facts--three .fact--gift { grid-column: 1 / -1; }
+@media (min-width: 768px) {
+  .facts--three { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 960px; }
+  .facts--three .fact--gift { grid-column: auto; }
+}
