@@ -60,8 +60,7 @@ CITY = {
     "hiero": "珲春",
     "from": "Владивостока",
     "from_gen": "Владивосток",    # именительный, для строк «Владивосток — Хуньчунь»
-    "lead": "Ближайший к Владивостоку город Китая. Выезды ежедневно, "
-            "туры от 3 до 10 дней.",
+    "lead": "Автобусные туры в Хуньчунь, Китай. Выезды ежедневно.",   # 633800
 }
 
 # J2, J3: домены от заказчика. Канонический выбираем позже (см. PRD).
@@ -142,9 +141,14 @@ PHONES_EXTRA = [("+7 (423) 248-48-92", "+74232484892"),
                 ("+7 (423) 248-48-91", "+74232484891")]
 WA_NUMBER = "79644444144"
 TG_LINK = "https://t.me/daltourChina"     # C4: закрыто, ссылка от заказчика
-SOCIALS = [("VK", "https://vk.com/daltour"),
-           ("YouTube", "https://youtube.com/daltour"),
-           ("Дзен", "https://dzen.ru/daltour")]
+# Порядок от заказчика (633804, 633805): YouTube, Яндекс (Дзен), Rutube, VK,
+# Telegram. YouTube и Дзен — как на dal-tour.ru, Rutube прислал заказчик.
+# Третье поле — подпись на квадратной кнопке в подвале.
+SOCIALS = [("YouTube", "https://www.youtube.com/@DALTOUR", "YT"),
+           ("Дзен", "https://dzen.ru/daltour", "Дзен"),
+           ("Rutube", "https://rutube.ru/channel/54520250/", "RT"),
+           ("VK", "https://vk.com/daltour", "VK"),
+           ("Telegram", TG_LINK, "TG")]
 ADDRESS = "690091, Россия, г. Владивосток,<br>ул. Мордовцева 3, офис 705"
 HOURS = "ПН–ПТ 10:00–18:00, СБ–ВС выходной"
 
@@ -235,15 +239,25 @@ def tour_url(d: int, base: str = "") -> str:
     return site_url("main", slug(d)) if SPLIT else f"{base}{slug(d)}"
 
 
-# H1, H2: видео НЕ встраиваем плеером — по клику открывается новая вкладка
-# с Яндексом, сайт остаётся в своей. Так страница не тянет чужой скрипт.
-# Обычно 3–4 ролика на тур, максимум 5.
-VIDEO_SLOTS = 4
-
-# Заполняется, когда заказчик пришлёт ссылки:
-#   VIDEOS = {3: [("Аквапарк", "https://..."), ("Зоопарк", "https://...")]}
-# ключ — количество дней в туре.
-VIDEOS: dict[int, list[tuple[str, str]]] = {}
+# H1–H4: видео экскурсий на страницах туров, одинаковые для всех
+# длительностей. Порядок — как у заказчика (633828): приезд, гостиница,
+# экскурсии, еда, чайная церемония. Подписи — названия с «Хуньчунем» для
+# поиска (633829). Формат как у PAGES["videos"]:
+# (подпись, страница на Дзене, превью в assets/img, секунды, embed-id).
+TOUR_VIDEOS = [
+    ("Владивосток — Хуньчунь на автобусе",
+     "https://dzen.ru/video/watch/695a3c5f86ae062350c7f467", "video-tour-1", 743, "oy0b1CCQKAAA"),
+    ("Гостиницы в Хуньчуне",
+     "https://dzen.ru/video/watch/695b90a7d6e03c1d0079b0ec", "video-tour-2", 3461, "oy0ZqQScKAAA"),
+    ("Большой Будда в Дуньхуа — экскурсия из Хуньчуня",
+     "https://dzen.ru/video/watch/695b130f2e2b4a128b7c39d7", "video-tour-3", 3247, "oy0YCACYKAAA"),
+    ("Стеклянный мост в Яньцзи — экскурсия из Хуньчуня",
+     "https://dzen.ru/video/watch/68102f027535b749adb6df14", "video-tour-4", 1631, "oy0aA8-0IAAA"),
+    ("Рестораны в Хуньчуне и цены",
+     "https://dzen.ru/video/watch/695b90d3b2bf8e79dd527604", "video-tour-5", 2081, "oy0YQQicKAAA"),
+    ("Чайная церемония в Хуньчуне",
+     "https://dzen.ru/video/watch/695b0adbe8b4617811c49770", "video-tour-6", 1267, "oy0bi-SUKAAA"),
+]
 
 
 # G1: дни подписываем словами — «люди не понимают один, два, три»
@@ -366,12 +380,11 @@ def header(base: str = "") -> str:
     return f"""
 <div class="topbar">
   <div class="wrap">
-    <span>Выезды из {CITY['from']} ежедневно</span>
+    <span>Выезды ежедневно</span>
     <div class="topbar__right">
       <span class="topbar__hours">{HOURS}</span>
       <span class="topbar__sep" aria-hidden="true">|</span>
-      <a href="{TG_LINK}">Telegram</a>
-      {' '.join(f'<a href="{u}">{n}</a>' for n, u in SOCIALS)}
+      {' '.join(f'<a href="{u}" target="_blank" rel="noopener">{n}</a>' for n, u, _ in SOCIALS)}
     </div>
   </div>
 </div>
@@ -438,8 +451,8 @@ def footer(base: str = "", tail: str = "") -> str:
     # C5: городские номера внизу
     phones = "\n".join(f'          <a href="tel:{t}">{h}</a>' for h, t in PHONES_EXTRA)
     socials = "\n".join(
-        f'          <a href="{u}" aria-label="{n}">{n[:2].upper() if n != "Дзен" else "Дзен"}</a>'
-        for n, u in SOCIALS)
+        f'          <a href="{u}" target="_blank" rel="noopener" aria-label="{n}">{short}</a>'
+        for n, u, short in SOCIALS)
     return f"""
 <footer class="footer" id="kontakty">
   <div class="wrap">
@@ -461,7 +474,6 @@ def footer(base: str = "", tail: str = "") -> str:
 {phones}
         </div>
         <div class="footer__social">
-          <a href="{TG_LINK}" aria-label="Telegram">TG</a>
 {socials}
         </div>
       </div>
@@ -490,7 +502,7 @@ def build_index() -> str:
             <span class="duration__days">{d} {days_word(d)}</span>
             <span class="duration__nights">{n} {nights_word(n)}</span>
           </span>
-          <span class="duration__go">Программа {IC_ARROW}</span>
+          <span class="duration__go">Программа тура {IC_ARROW}</span>
         </a>""" for d, n in TOURS)
 
     first, last = TOURS[0][0], TOURS[-1][0]
@@ -526,12 +538,12 @@ def build_index() -> str:
     <div class="wrap">
       <ul class="marks">
         <li class="mark">
-          <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="7" r="3" stroke="#A7211A" stroke-width="1.4"/><path d="M4 17c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="#A7211A" stroke-width="1.4" stroke-linecap="round"/></svg>
-          Гиды-переводчики
+          <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="3" width="14" height="11" rx="2.5" stroke="#A7211A" stroke-width="1.4"/><path d="M3 9h14M6.5 17v-3M13.5 17v-3" stroke="#A7211A" stroke-width="1.4" stroke-linecap="round"/><circle cx="6.5" cy="11.5" r=".9" fill="#A7211A"/><circle cx="13.5" cy="11.5" r=".9" fill="#A7211A"/></svg>
+          Рейсовый автобус 100%!
         </li>
         <li class="mark">
           <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7.5" stroke="#A7211A" stroke-width="1.4"/><path d="M10 6v4.3l2.8 1.7" stroke="#A7211A" stroke-width="1.4" stroke-linecap="round"/></svg>
-          Выезды ежедневно
+          Выезды ежедневно!
         </li>
       </ul>
     </div>
@@ -549,8 +561,9 @@ def build_index() -> str:
         # D4, D6: «рады проконсультировать», без оговорки про праздники (D5)
         + contacts(
             "Всегда рады вас проконсультировать в WhatsApp",
-            "Стоимость зависит от дат выезда, категории отеля и количества дней. "
-            "Позвоните или напишите — посчитаем на ваши даты.",
+            # 633807: формулировка заказчика
+            "Стоимость тура зависит от даты выезда, категории отеля 3*, 4*, 5* "
+            "и количества дней.",
             f"Здравствуйте! Подскажите по турам в {CITY['name']}.")
         + """
 </main>
@@ -583,25 +596,28 @@ def render_md(name: str) -> tuple:
     return h1, "\n        ".join(parts)
 
 
-def video_cards(d: int) -> str:
-    """H1–H3: карточка-ссылка на Яндекс, открывается в новой вкладке."""
-    items = VIDEOS.get(d)
-    if items:
-        return "\n".join(f"""        <a class="video" href="{url}" target="_blank" rel="noopener">
-          <span class="video__frame">
+def vcard(name: str, url: str, thumb: str, secs: int, embed: str = "") -> str:
+    """Карточка видео. Нажатие на превью — плеер Дзена прямо на странице
+    (iframe создаётся только по клику, заранее ничего не грузится).
+    Ссылка под названием и клик с Ctrl/Cmd — ролик в новой вкладке, чтобы,
+    закрыв его, человек не закрыл сайт (633831, 633833)."""
+    mins = f"{secs // 60} мин"
+    data = f' data-embed="https://dzen.ru/embed/{embed}"' if embed else ""
+    img = (f'<img src="assets/img/{thumb}.jpg" alt="" loading="lazy" '
+           f'decoding="async" width="516" height="290">'
+           if has_img(thumb + ".jpg") else "")
+    return f"""        <div class="video{' video--thumb' if img else ''}"{data}>
+          <a class="video__frame" href="{url}" target="_blank" rel="noopener" aria-label="Смотреть: {name}">
+            {img}
             <span class="video__play">{IC_PLAY}</span>
-            <span class="video__hint">Смотреть на Яндексе</span>
-          </span>
-          <span class="video__cap">{name}</span>
-        </a>""" for name, url in items)
+            <span class="video__len">{mins}</span>
+          </a>
+          <span class="video__cap">{name}<a class="video__ext" href="{url}" target="_blank" rel="noopener">Открыть в новом окне ↗</a></span>
+        </div>"""
 
-    return "\n".join(f"""        <div class="video video--empty">
-          <span class="video__frame">
-            <span class="video__play">{IC_PLAY}</span>
-            <span class="video__hint">Откроется на Яндексе в новой вкладке</span>
-          </span>
-          <span class="video__cap">[ЭКСКУРСИЯ {v} — название и ссылку пришлёт заказчик]</span>
-        </div>""" for v in range(1, VIDEO_SLOTS + 1))
+
+def video_cards(d: int) -> str:
+    return "\n".join(vcard(*v) for v in TOUR_VIDEOS)
 
 
 # ---------------------------------------------------------------- контентные страницы
@@ -617,27 +633,7 @@ def build_page(pg: dict) -> str:
                   f'        <div class="gallery__item gallery__item--empty">'
                   f'<span>[ФОТОГРАФИЯ {i + 1} — пришлёт заказчик]</span></div>\n')
 
-    # видео открывается на Яндексе в новой вкладке, как на страницах туров
-    # Плеер «по клику»: сначала только превью, iframe Дзена создаётся при
-    # нажатии и сразу стартует. Страница не грузит плеер заранее, а href на
-    # страницу ролика остаётся запасным путём, если скрипты отключены.
-    # embed-id Дзен отдаёт в <meta name="twitter:player:stream"> страницы ролика.
-    def vcard(name: str, url: str, thumb: str, secs: int, embed: str = "") -> str:
-        mins = f"{secs // 60} мин"
-        data = f' data-embed="https://dzen.ru/embed/{embed}"' if embed else ""
-        hint = "Смотреть здесь же" if embed else "Откроется на Дзене в новой вкладке"
-        img = (f'<img src="assets/img/{thumb}.jpg" alt="" loading="lazy" '
-               f'decoding="async" width="516" height="290">'
-               if has_img(thumb + ".jpg") else "")
-        return f"""        <a class="video{' video--thumb' if img else ''}" href="{url}" target="_blank" rel="noopener"{data}>
-          <span class="video__frame">
-            {img}
-            <span class="video__play">{IC_PLAY}</span>
-            <span class="video__len">{mins}</span>
-          </span>
-          <span class="video__cap">{name}<small>{hint}</small></span>
-        </a>"""
-
+    # embed-id Дзен отдаёт в <meta name="twitter:player:stream"> страницы ролика
     vids = "\n".join(vcard(*v) for v in pg["videos"])
     video_block = f"""
   <section class="section" id="video">
@@ -685,11 +681,13 @@ def build_page(pg: dict) -> str:
   <section class="section">
     <div class="wrap">
       <div class="notice">
-        <b>Важно</b>
-        <p>[ДИСКЛЕЙМЕР — проверить с юристом. Реклама медицинских услуг в РФ,
-        как правило, требует предупреждения о противопоказаниях и
-        необходимости консультации специалиста. Точную формулировку
-        согласовать до публикации на боевом домене.]</p>
+        <b>Важно!</b>
+        <p><strong>Имеются противопоказания. Необходима консультация специалиста.</strong></p>
+        <p>Информация, представленная на сайте, носит ознакомительный характер
+        и не является медицинской консультацией, постановкой диагноза или
+        назначением лечения. Решение о возможности проведения лечения и
+        медицинских процедур принимается врачом после консультации
+        и обследования пациента.</p>
       </div>
     </div>
   </section>
@@ -773,7 +771,7 @@ def build_tour(d: int, n: int) -> str:
 
   <section class="section" id="programma">
     <div class="wrap">
-      <div class="section__head"><h2>Программа по дням</h2></div>
+      <div class="section__head"><h2>Программа тура в {CITY['name']}</h2></div>
       <div class="days">
 {chr(10).join(days)}
       </div>
@@ -781,16 +779,13 @@ def build_tour(d: int, n: int) -> str:
   </section>
 """
         # C6: после программы — телефон и мессенджеры
-        + contacts("Звоните и пишите — подскажем по этому туру",
+        + contacts("Остались вопросы? Рады вас проконсультировать",
                    "Ответим в рабочее время: ПН–ПТ 10:00–18:00.",
                    wa_text)
         + f"""
   <section class="section" id="video">
     <div class="wrap">
-      <div class="section__head">
-        <h2>Экскурсии на видео</h2>
-        <span class="section__note">Яндекс.Видео</span>
-      </div>
+      <div class="section__head"><h2>Экскурсии на видео</h2></div>
       <div class="videos">
 {videos}
       </div>
@@ -804,10 +799,7 @@ def build_tour(d: int, n: int) -> str:
         + f"""
   <section class="section" id="drugie">
     <div class="wrap">
-      <div class="section__head">
-        <h2>Другая длительность</h2>
-        <span class="section__note">та же программа, больше дней в городе</span>
-      </div>
+      <div class="section__head"><h2>Туры в {CITY['name']} на</h2></div>
       <div class="pill-row">
 {others}
       </div>

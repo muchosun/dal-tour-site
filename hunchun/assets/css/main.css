@@ -934,7 +934,7 @@ body.has-stickybar { padding-bottom: 88px; }
 .video__frame b { font-size: 14px; font-weight: 600; color: #7A6A52; }
 .video__frame span { font-size: 12px; line-height: 1.5; color: #9A8B73; max-width: 320px; }
 .video__frame iframe { width: 100%; height: 100%; border: 0; display: block; }
-.video__cap { display: block; padding: 12px 16px; font-size: 14px; font-weight: 600; }
+.video__cap { display: flex; flex-direction: column; align-items: flex-start; padding: 12px 16px 10px; font-size: 14px; font-weight: 600; }
 
 /* контакты в шапке: мессенджеры */
 .msgr { display: flex; align-items: center; gap: 8px; }
@@ -1115,9 +1115,21 @@ body.has-stickybar { padding-bottom: 88px; }
 }
 
 /* H1: карточка-ссылка на Яндекс, плеер на страницу не встраиваем */
-a.video { display: block; color: var(--ink); }
-a.video:hover { border-color: var(--ink); color: var(--ink); }
-a.video:hover .video__play { color: var(--red); }
+a.video__frame { color: var(--ink); cursor: pointer; }
+.video:hover { border-color: var(--ink); }
+.video.is-playing:hover { border-color: var(--line); }
+a.video__frame:hover .video__play { color: var(--red); }
+/* 633831, 633833: ролик можно открыть отдельно, не закрывая сайт */
+.video__ext {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--red-deep);
+}
+.video__ext:hover { text-decoration: underline; }
 .video__play { color: #B9A88C; line-height: 0; transition: color .15s; }
 .video__hint {
   font-size: 12px;
@@ -1231,7 +1243,7 @@ a.video:hover .video__play { color: var(--red); }
   color: #fff;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, .45));
 }
-.video--thumb:hover .video__play { color: #fff; transform: scale(1.08); }
+.video--thumb a.video__frame:hover .video__play { color: #fff; transform: scale(1.08); }
 .video__play { transition: color .15s, transform .15s; }
 .video__len {
   position: absolute;
@@ -1272,4 +1284,9 @@ a.video:hover .video__play { color: var(--red); }
   .contacts { flex-direction: row; align-items: center; justify-content: space-between; gap: 32px; }
   .contacts__text { flex: 1 1 auto; min-width: 0; }
   .contacts__actions { flex: 0 0 auto; flex-wrap: nowrap; }
+}
+
+/* 320 px: номер телефона в кнопке не помещался в поля тёмного блока */
+@media (max-width: 359px) {
+  .contacts { padding-left: 14px; padding-right: 14px; }
 }
