@@ -22,9 +22,29 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # поэтому апекс и каждый сабдомен — свой репозиторий и своя папка в dist/.
 HOSTS = {
     "main": "hunchun-hunchun.ru",
-    "stoma": "dental.hunchun-hunchun.ru",
-    "lech": "clinic.hunchun-hunchun.ru",
+    # 633865: адреса кириллицей в латинице, как Яндекс подсвечивает в выдаче
+    "stoma": "stomatologiya.hunchun-hunchun.ru",
+    "lech": "lechenie-v-kitae.hunchun-hunchun.ru",
 }
+# Старые адреса разделов уводят на новые — ссылки на них уже разосланы
+OLD_HOSTS = {"stoma": "dental.hunchun-hunchun.ru", "lech": "clinic.hunchun-hunchun.ru"}
+
+# R1 (633847, 633863, 633864): тот же сайт с туров под другой город
+# отправления, на поддомене. Программа та же, меняется город старта.
+# draft — закрыт от поиска, пока заказчик не пришлёт тексты под город.
+DEPARTURES = {
+    "main": {"host": "hunchun-hunchun.ru", "from": "Владивостока", "from_gen": "Владивосток",
+             "to_acc": "во Владивосток", "route_there": "Владивосток", "route_back": "Владивосток",
+             "draft": False},
+    "us": {"host": "ussuriysk.hunchun-hunchun.ru", "from": "Уссурийска", "from_gen": "Уссурийск",
+           "to_acc": "в Уссурийск", "route_there": "Уссурийск", "route_back": "Уссурийск",
+           "draft": True},
+    # из Хабаровска — свой автобус до Уссурийска, там пересадка
+    "hb": {"host": "habarovsk.hunchun-hunchun.ru", "from": "Хабаровска", "from_gen": "Хабаровск",
+           "to_acc": "в Хабаровск", "route_there": "Хабаровск — Уссурийск",
+           "route_back": "Уссурийск — Хабаровск", "draft": True},
+}
+DEP = "main"   # какой город сейчас собираем; переключает build_dist()
 MIRROR = "xn----ytbaba5abcbmfug6dded.xn--p1ai"   # хуньчунь-хуньчунь.рф в punycode
 
 # python3 build.py          — превью, всё в одной папке, ссылки относительные
@@ -104,25 +124,6 @@ PAGES = [
                     "https://dzen.ru/video/watch/695b5698a45e4e67c3bbee6a",
                     "video-lech-2", 1108, "oy0Z1aSYKAAA")],
         "wa": "Здравствуйте! Интересует лечение в Хуньчуне.",
-    },
-    {
-        # M2: отдельный запрос «лечение в Китае». Живёт на clinic. рядом с
-        # «Лечением в Хуньчуне». Пока заготовка: текст пришлёт заказчик,
-        # до этого страница закрыта от индексации и не попадает в sitemap.
-        # Видео не ставим — просьба заказчика.
-        "slug": "lechenie-v-kitae.html",
-        "key": "lech",
-        "path": "lechenie-v-kitae.html",
-        "draft": True,
-        "nav": "Лечение в Китае",
-        "content": "lechenie-v-kitae.md",
-        # «лечение в Китае» — широкий ключ, без города (голосовые 633722–23)
-        "title": "Лечение в Китае | ДАЛЬТУР",
-        "desc": "Лечение в Китае: клиники, процедуры, цены и организация "
-                "поездки с ДАЛЬТУР.",
-        "imgs": [],
-        "videos": [],
-        "wa": "Здравствуйте! Интересует лечение в Китае.",
     },
 ]
 
@@ -359,6 +360,8 @@ def head(title: str, desc: str, base: str = "", sticky: bool = False,
     # после запуска это полная копия боевого сайта на чужом адресе.
     # В боевой сборке каждая страница указывает свой канонический адрес —
     # по нему же будет ссылаться зеркало на .рф.
+    if SPLIT and DEPARTURES[DEP]["draft"]:
+        noindex = True
     if SPLIT and canonical and not noindex:
         seo = (f'<link rel="canonical" href="{canonical}">\n'
                f'<meta property="og:url" content="{canonical}">')
@@ -732,13 +735,14 @@ def build_tour(d: int, n: int) -> str:
     # G1, G2: «Первый день» вместо цифры
     days = []
     for i in range(1, d + 1):
+        dep = DEPARTURES[DEP]
         if i == 1:
-            title = f"{CITY['from_gen']} — {CITY['name']}"
-            body = ("[ВЫЕЗД из Владивостока, пункт пропуска, прибытие в "
+            title = f"{dep['route_there']} — {CITY['name']}"
+            body = (f"[ВЫЕЗД из {dep['from']}, пункт пропуска, прибытие в "
                     f"{CITY['name_pre']}, размещение в отеле. Текст пришлёт заказчик.]")
         elif i == d:
-            title = f"{CITY['name']} — {CITY['from_gen']}"
-            body = ("[ОСВОБОЖДЕНИЕ НОМЕРОВ, выезд, прибытие во Владивосток. "
+            title = f"{CITY['name']} — {dep['route_back']}"
+            body = (f"[ОСВОБОЖДЕНИЕ НОМЕРОВ, выезд, прибытие {dep['to_acc']}. "
                     "Текст пришлёт заказчик.]")
         else:
             title = CITY["name"]
@@ -837,8 +841,17 @@ def build_tour(d: int, n: int) -> str:
 """))
 
 
+def set_departure(key: str) -> None:
+    """Переключить город отправления: заголовки, программа, адреса туров."""
+    global DEP
+    DEP = key
+    dep = DEPARTURES[key]
+    CITY["from"], CITY["from_gen"] = dep["from"], dep["from_gen"]
+    HOSTS["main"] = dep["host"]
+
+
 def build_dist() -> list:
-    """Три отдельных корня под три домена: у каждого свой CNAME."""
+    """Отдельный корень под каждый домен: у каждого свой CNAME."""
     out = []
 
     def clean(root: str) -> None:
@@ -852,13 +865,18 @@ def build_dist() -> list:
             path = os.path.join(root, name)
             shutil.rmtree(path) if os.path.isdir(path) else os.remove(path)
 
-    plan = [
-        ("main", HOSTS["main"], None),
+    # сайты туров — по городу отправления; разделы — общие для всех
+    plan = [(k, None, None) for k in DEPARTURES] + [
         ("stoma", HOSTS["stoma"], PAGES[0]),
         ("lech", HOSTS["lech"], PAGES[1]),
     ]
 
     for key, host, pg in plan:
+        if key in DEPARTURES:
+            set_departure(key)
+            host = HOSTS["main"]
+        else:
+            set_departure("main")
         root = os.path.join(DIST, key)
         os.makedirs(root, exist_ok=True)
         clean(root)
@@ -867,7 +885,7 @@ def build_dist() -> list:
         with open(os.path.join(root, "CNAME"), "w", encoding="utf-8") as fh:
             fh.write(host + "\n")
 
-        if key == "main":
+        if key in DEPARTURES:
             with open(os.path.join(root, "index.html"), "w", encoding="utf-8") as fh:
                 fh.write(build_index())
             for d, n in TOURS:
@@ -889,8 +907,9 @@ def build_dist() -> list:
         # sitemap и robots — чтобы поисковики сразу нашли все страницы.
         # Host: не пишем: Яндекс отказался от директивы в 2018, главное зеркало
         # теперь определяется по canonical и редиректам.
-        urls = ([canon("main")] + [canon("main", slug(d)) for d, _ in TOURS]
-                if key == "main" else
+        urls = ([] if DEPARTURES[DEP]["draft"] and key in DEPARTURES else
+                [canon("main")] + [canon("main", slug(d)) for d, _ in TOURS]
+                if key in DEPARTURES else
                 [canon(key)] + [canon(key, p["path"]) for p in PAGES
                                 if p.get("key") == key and p.get("path") and not p.get("draft")])
         today = __import__("datetime").date.today().isoformat()
@@ -902,7 +921,10 @@ def build_dist() -> list:
         with open(os.path.join(root, "robots.txt"), "w", encoding="utf-8") as fh:
             fh.write(f"User-agent: *\nAllow: /\n\nSitemap: https://{host}/sitemap.xml\n")
 
+    set_departure("main")
     out.append(build_mirror())
+    for key in OLD_HOSTS:
+        out.append(build_old_redirect(key))
     return out
 
 
@@ -949,6 +971,29 @@ def build_mirror() -> str:
     with open(os.path.join(root, "robots.txt"), "w", encoding="utf-8") as fh:
         fh.write("User-agent: *\nAllow: /\n")
     return f"dist/rf/ — {MIRROR} → {HOSTS['main']}, {len(pages)} страниц-редиректов"
+
+
+def build_old_redirect(key: str) -> str:
+    """dental. → stomatologiya., clinic. → lechenie-v-kitae.: старые адреса
+    разделов уводят на новые, тем же способом, что и зеркало .рф."""
+    root = os.path.join(DIST, f"old-{key}")
+    os.makedirs(root, exist_ok=True)
+    for name in os.listdir(root):
+        if name != ".git":
+            path = os.path.join(root, name)
+            shutil.rmtree(path) if os.path.isdir(path) else os.remove(path)
+    target = canon(key)
+    with open(os.path.join(root, "index.html"), "w", encoding="utf-8") as fh:
+        fh.write(redirect_page(target))
+    # была страница-заготовка clinic./lechenie-v-kitae.html — туда же
+    with open(os.path.join(root, "404.html"), "w", encoding="utf-8") as fh:
+        fh.write(redirect_page(target))
+    with open(os.path.join(root, "CNAME"), "w", encoding="utf-8") as fh:
+        fh.write(OLD_HOSTS[key] + "\n")
+    open(os.path.join(root, ".nojekyll"), "w").close()
+    with open(os.path.join(root, "robots.txt"), "w", encoding="utf-8") as fh:
+        fh.write("User-agent: *\nAllow: /\n")
+    return f"dist/old-{key}/ — {OLD_HOSTS[key]} → {HOSTS[key]}"
 
 
 def main() -> None:

@@ -186,3 +186,42 @@ GitHub при этом коммитит «Delete CNAME» / «Create CNAME» — 
 записи вносятся руками по списку выше.
 
 Пароли, отправленные сообщением в мессенджер, стоит сменить после настройки.
+
+## Переезд разделов и поддомены городов (30.09)
+
+Новые адреса (транслитерация по схеме Яндекса, 633865):
+
+| Что | Адрес | Репозиторий | `dist/` |
+|---|---|---|---|
+| Стоматология | `stomatologiya.hunchun-hunchun.ru` | `hunchun-dental` | `stoma` |
+| Лечение в Китае | `lechenie-v-kitae.hunchun-hunchun.ru` | `hunchun-clinic` | `lech` |
+| Туры из Уссурийска | `ussuriysk.hunchun-hunchun.ru` | `hunchun-ussuriysk` | `us` |
+| Туры из Хабаровска | `habarovsk.hunchun-hunchun.ru` | `hunchun-habarovsk` | `hb` |
+| старый `dental.` → стоматология | `dental.hunchun-hunchun.ru` | `hunchun-dental-redirect` | `old-stoma` |
+| старый `clinic.` → лечение | `clinic.hunchun-hunchun.ru` | `hunchun-clinic-redirect` | `old-lech` |
+
+DNS в Hostline, зона `hunchun-hunchun.ru` — четыре новые записи, старые
+`dental` и `clinic` не трогаем:
+
+| Тип | Имя | Значение |
+|---|---|---|
+| CNAME | `stomatologiya` | `muchosun.github.io.` |
+| CNAME | `lechenie-v-kitae` | `muchosun.github.io.` |
+| CNAME | `ussuriysk` | `muchosun.github.io.` |
+| CNAME | `habarovsk` | `muchosun.github.io.` |
+
+Порядок переключения — один домен может висеть только на одном
+репозитории Pages:
+
+1. Добавить DNS и дождаться, пока `dns.google` отдаёт CNAME для всех четырёх.
+2. Запушить `dist/stoma` и `dist/lech` — там уже новый CNAME. В Pages
+   этих репозиториев поставить новые домены.
+3. Включить Pages в `hunchun-dental-redirect` и `hunchun-clinic-redirect`
+   с доменами `dental.` и `clinic.` — освободились на шаге 2.
+4. Запушить `dist/main` (ссылки на новые адреса разделов).
+5. Включить Pages в `hunchun-ussuriysk` и `hunchun-habarovsk`.
+6. Ждать сертификаты; если висит `null` / `dns_changed` — снять домен
+   и вписать заново (см. выше). Затем Enforce HTTPS.
+
+Сайты городов — черновики (`draft` в `DEPARTURES`): noindex, пустой
+sitemap. Когда придут тексты под город — `draft: False`.
