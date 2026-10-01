@@ -363,8 +363,64 @@ def inline_css() -> str:
     return re.sub(r"\s*([{};,>])\s*", r"\1", css).strip()
 
 
+# ---------------------------------------------------------------- SEO-разметка
+
+# Schema.org в JSON-LD: на странице не видна, только поисковикам.
+# Организация — всегда основной сайт, с какого бы поддомена ни собирали.
+SITE_ROOT = "https://hunchun-hunchun.ru/"
+
+
+def org_ld() -> dict:
+    return {
+        "@type": "TravelAgency", "@id": SITE_ROOT + "#org", "name": "ДАЛЬТУР",
+        "url": SITE_ROOT, "logo": SITE_ROOT + "assets/apple-touch-icon.png",
+        "image": SITE_ROOT + "assets/apple-touch-icon.png",
+        "telephone": [PHONE_MAIN_TEL] + [t for _, t in PHONES_EXTRA],
+        "address": {"@type": "PostalAddress", "streetAddress": "ул. Мордовцева, 3, офис 705",
+                    "addressLocality": "Владивосток", "postalCode": "690091", "addressCountry": "RU"},
+        "openingHoursSpecification": [{"@type": "OpeningHoursSpecification",
+                                       "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                                       "opens": "10:00", "closes": "18:00"}],
+        "sameAs": [u for _, u, _ in SOCIALS],
+    }
+
+
+def crumbs_ld(items: list) -> dict:
+    return {"@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": i, "name": name, "item": url}
+        for i, (name, url) in enumerate(items, 1)]}
+
+
+def ld_script(nodes: list) -> str:
+    if not nodes:
+        return ""
+    data = {"@context": "https://schema.org", "@graph": nodes}
+    raw = __import__("json").dumps(data, ensure_ascii=False, separators=(",", ":"))
+    return f'<script type="application/ld+json">{raw.replace("</", "<\\/")}</script>'
+
+
+def faq_ld(md_path: str) -> dict | None:
+    """«### Вопрос?» и абзацы после него в статье под город → FAQPage."""
+    if not os.path.exists(md_path):
+        return None
+    qa, cur = [], None
+    for block in pathlib.Path(md_path).read_text(encoding="utf-8").split("\n\n"):
+        b = block.strip()
+        if b.startswith("### ") and b.endswith("?"):
+            cur = [b[4:].strip(), []]; qa.append(cur)
+        elif b.startswith("#"):
+            cur = None
+        elif cur is not None and b:
+            cur[1].append(" ".join(b.split()))
+    if not qa:
+        return None
+    return {"@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": " ".join(a)}}
+        for q, a in qa if a]}
+
+
 def head(title: str, desc: str, base: str = "", sticky: bool = False,
-         canonical: str = "", noindex: bool = False) -> str:
+         canonical: str = "", noindex: bool = False, ld: list | None = None) -> str:
     # Превью (staging на github.io) закрываем от индексации целиком: иначе
     # после запуска это полная копия боевого сайта на чужом адресе.
     # В боевой сборке каждая страница указывает свой канонический адрес —
@@ -389,7 +445,11 @@ def head(title: str, desc: str, base: str = "", sticky: bool = False,
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{desc}">
 <meta property="og:locale" content="ru_RU">
-<link rel="icon" href="{FAVICON}">
+<meta property="og:site_name" content="ДАЛЬТУР">
+<link rel="icon" href="{"/favicon.ico" if SPLIT else base + "assets/favicon.ico"}" sizes="48x48">
+<link rel="icon" href="{base}assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="{base}assets/apple-touch-icon.png">
+{ld_script(ld or []) if SPLIT and not noindex else ""}
 <link rel="preload" href="{base}{asset_v('assets/fonts/unbounded-cyrillic.woff2')}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{base}{asset_v('assets/fonts/golos-cyrillic.woff2')}" as="font" type="font/woff2" crossorigin>
 <style>{font_faces(base)}{inline_css()}</style>
@@ -565,7 +625,15 @@ def build_index() -> str:
         f"Туры в {CITY['name']} из {CITY['from']} от {first} до {last} дней. "
         f"Программа тура, выезды ежедневно. "
         f"Звоните {PHONE_MAIN_HUMAN} или пишите в WhatsApp.",
-        canonical=canon("main"))
+        canonical=canon("main"),
+        ld=[org_ld(),
+            {"@type": "WebSite", "name": "ДАЛЬТУР — туры в Хуньчунь", "url": canon("main"),
+             "inLanguage": "ru", "publisher": {"@id": SITE_ROOT + "#org"}},
+            {"@type": "ItemList", "name": f"Туры в {CITY['name']} из {CITY['from']}",
+             "itemListElement": [{"@type": "ListItem", "position": i, "url": canon("main", slug(dd)),
+                                  "name": f"Тур в {CITY['name']} {label(dd, nn)}"}
+                                 for i, (dd, nn) in enumerate(TOURS, 1)]}]
+           + [x for x in [faq_ld(city_md)] if x])
         + header() + f"""
 <main id="main">
 
@@ -650,7 +718,7 @@ def vcard(name: str, url: str, thumb: str, secs: int, embed: str = "") -> str:
     закрыв его, человек не закрыл сайт (633831, 633833)."""
     mins = f"{secs // 60} мин"
     data = f' data-embed="https://dzen.ru/embed/{embed}"' if embed else ""
-    img = (f'<img src="assets/img/{thumb}.jpg" alt="" loading="lazy" '
+    img = (f'<img src="assets/img/{thumb}.jpg" alt="Видео: {name}" loading="lazy" '
            f'decoding="async" width="516" height="290">'
            if has_img(thumb + ".jpg") else "")
     return f"""        <div class="video{' video--thumb' if img else ''}"{data}>
@@ -707,7 +775,14 @@ def build_page(pg: dict) -> str:
 
     key = pg.get("key") or ("stoma" if pg["slug"].startswith("stoma") else "lech")
     return (head(pg["title"], pg["desc"], canonical=canon(key, pg.get("path", "")),
-                 noindex=pg.get("draft", False)) + header() + f"""
+                 noindex=pg.get("draft", False),
+                 # без медицинских типов Schema.org: ДАЛЬТУР не клиника
+                 ld=[org_ld(),
+                     {"@type": "Article", "headline": h1, "description": pg["desc"],
+                      "url": canon(key), "inLanguage": "ru", "mainEntityOfPage": canon(key),
+                      "author": {"@id": SITE_ROOT + "#org"}, "publisher": {"@id": SITE_ROOT + "#org"}},
+                     crumbs_ld([(f"Туры в {CITY['name']}", SITE_ROOT), (pg["nav"], canon(key))])])
+            + header() + f"""
 <main id="main">
 
   <section class="hero hero--lean">
@@ -912,7 +987,18 @@ def build_tour(d: int, n: int) -> str:
         f"Тур в {CITY['name']} {lbl} из {CITY['from']} — ДАЛЬТУР",
         f"Тур в {CITY['name']} на {lbl} из {CITY['from']}: программа по дням, "
         f"выезды ежедневно. Стоимость уточняйте по телефону {PHONE_MAIN_HUMAN}.",
-        sticky=True, canonical=canon("main", slug(d)))
+        sticky=True, canonical=canon("main", slug(d)),
+        ld=[org_ld(),
+            {"@type": "TouristTrip", "name": f"Тур в {CITY['name']} из {CITY['from']} — {lbl}",
+             "description": " ".join(text["intro"]) if text else
+                            f"Автобусный тур в {CITY['name']} из {CITY['from']} на {lbl}.",
+             "url": canon("main", slug(d)), "touristType": "Автобусный тур",
+             "provider": {"@id": SITE_ROOT + "#org"},
+             **({"itinerary": {"@type": "ItemList", "itemListElement": [
+                 {"@type": "ListItem", "position": i, "name": f"{ORDINALS[i]} день: {t}",
+                  "description": " ".join(r for r in rows if not r.startswith("Экскурсии и шопинг"))}
+                 for i, (t, rows) in enumerate(text["days"], 1)]}} if text else {})},
+            crumbs_ld([(f"Туры в {CITY['name']}", canon("main")), (lbl, canon("main", slug(d)))])])
         + header() + f"""
 <main id="main">
 
@@ -1030,6 +1116,8 @@ def build_dist() -> list:
         os.makedirs(root, exist_ok=True)
         clean(root)
         shutil.copytree(os.path.join(HERE, "assets"), os.path.join(root, "assets"))
+        # Яндекс и браузеры ищут значок в корне сайта
+        shutil.copy(os.path.join(HERE, "assets", "favicon.ico"), os.path.join(root, "favicon.ico"))
 
         with open(os.path.join(root, "CNAME"), "w", encoding="utf-8") as fh:
             fh.write(host + "\n")
