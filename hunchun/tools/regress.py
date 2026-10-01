@@ -15,7 +15,7 @@ SITES = {   # хост → черновик (должен быть noindex)
 }
 UA = {"User-Agent": "Mozilla/5.0 (regress)"}
 SKIP_EXT = ("dental.",)          # у разработчика провайдер режет «dental» — проверяем снаружи
-ASSET = (".css", ".js", ".woff2", ".jpg", ".png", ".svg", ".webp")
+ASSET = (".css", ".js", ".woff2", ".jpg", ".png", ".svg", ".webp", ".ico")
 
 
 def fetch(u):
