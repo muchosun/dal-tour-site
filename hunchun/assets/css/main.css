@@ -1346,3 +1346,14 @@ a.video__frame:hover .video__play { color: var(--red); }
 .prose h3 { margin-top: 24px; font-size: 17px; font-weight: 600; line-height: 1.35; color: var(--ink); }
 .prose h3 + p { margin-top: 8px; }
 .prose--city > p:first-child { margin-top: 0; }
+
+/* Подарочные экскурсии: каждая строкой, с красной иконкой (634130) */
+.gift { display: flex; align-items: center; gap: 8px; }
+.gift + .gift { margin-top: 2px; }
+.gift svg { flex: none; color: var(--red); }
+
+/* «Выезд из Хабаровска» перед программой по дням */
+.day-pre { margin-top: 16px; padding: 14px 16px; background: var(--card); border: 1px dashed var(--line-strong); border-radius: 14px; }
+.day-pre b { font-size: 15px; }
+.day-pre p { margin-top: 6px; font-size: 14px; line-height: 1.6; color: var(--muted); }
+.facts--three { align-items: stretch; }

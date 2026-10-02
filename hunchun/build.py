@@ -42,7 +42,8 @@ DEPARTURES = {
     # из Хабаровска — свой автобус до Уссурийска, там пересадка
     "hb": {"host": "habarovsk.hunchun-hunchun.ru", "from": "Хабаровска", "from_gen": "Хабаровск",
            "to_acc": "в Хабаровск", "route_there": "Хабаровск — Уссурийск",
-           "route_back": "Уссурийск — Хабаровск", "draft": True},
+           "route_back": "Уссурийск — Хабаровск",
+           "draft": False},   # 02.10: все 10 туров и SEO-статья от заказчика
 }
 DEP = "main"   # какой город сейчас собираем; переключает build_dist()
 MIRROR = "xn----ytbaba5abcbmfug6dded.xn--p1ai"   # хуньчунь-хуньчунь.рф в punycode
@@ -300,6 +301,15 @@ IC_PHONE = ('<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
             '<path fill="currentColor" d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.28-.28.67-.36 '
             '1.02-.25c1.12.37 2.32.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 '
             '1 0 0 1 1 1c0 1.25.2 2.45.57 3.57c.11.35.03.74-.25 1.02z"/></svg>')
+# Подарочные экскурсии (634130): чайник — IconPark, коробочка — Material Symbols, Apache 2.0
+IC_TEAPOT = ('<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><g fill="none" stroke="currentColor" '
+             'stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M23.001 13c-7.3 0-13.458 5.07-15.379 '
+             '12H38.38c-1.92-6.93-8.079-12-15.379-12"/><path fill="currentColor" d="M7.001 29.593c0 4.418 1.665 8.433 4.381 '
+             '11.407H34.62c2.716-2.974 4.381-6.989 4.381-11.407c0-1.594-.217-3.134-.62-4.593H7.62C7.217 26.459 7 28 7 29.593"/>'
+             '<path d="M27 13v-2a4 4 0 0 0-4-4v0a4 4 0 0 0-4 4v2M7 28s-1.985-.131-3-2.5C2.5 22 5 20 6 17c.761-2.282-.793-3.986-1.58-4.67'
+             'c-.252-.22-.42-.53-.42-.865v-.618c0-.489.354-.903.843-.92C5.878 9.887 7.663 9.996 9 11c2 1.5 3 6 3 6M9 41h28m2-16a5 5 0 1 0-4.584-7"/></g></svg>')
+IC_TAKEOUT = ('<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" '
+              'd="M4.625 10L2 7.45l1.4-1.4L5 7.65l-.05-.6L9 3h6l4.05 4.05l-.05.6l1.6-1.6l1.4 1.4L19.375 10zM5.95 20l-.65-8.45h13.4L18.05 20z"/></svg>')
 IC_ARROW = ('<svg width="14" height="12" viewBox="0 0 14 12" fill="none" aria-hidden="true">'
             '<path d="M1 6h11M8 2l4 4-4 4" stroke="currentColor" stroke-width="1.6"'
             ' stroke-linecap="round" stroke-linejoin="round"/></svg>')
@@ -596,19 +606,7 @@ def build_index() -> str:
     city_md = os.path.join(HERE, "content", "city", f"{DEP}.md")
     city_meta = os.path.join(HERE, "content", "city", f"{DEP}.meta.json")
     meta = __import__("json").load(open(city_meta, encoding="utf-8")) if os.path.exists(city_meta) else {}
-    if os.path.exists(city_md):
-        _, art = render_md(os.path.join("city", f"{DEP}.md"))
-        city_block = f"""
-  <section class="section" id="o-gorode">
-    <div class="wrap">
-      <div class="prose prose--city">
-        {art}
-      </div>
-    </div>
-  </section>
-"""
-    else:
-        city_block = f"""
+    about_block = f"""
   <section class="section" id="o-gorode">
     <div class="wrap">
       <div class="section__head"><h2>{render_md("o-gorode.md")[0] or "О городе"}</h2></div>
@@ -618,6 +616,21 @@ def build_index() -> str:
     </div>
   </section>
 """
+    if os.path.exists(city_md):
+        _, art = render_md(os.path.join("city", f"{DEP}.md"))
+        # у Владивостока под статьёй остаётся «О городе» (634122); у других
+        # городов в «О городе» абзац про дорогу из Владивостока — без него
+        city_block = f"""
+  <section class="section" id="{'statya' if DEP == 'main' else 'o-gorode'}">
+    <div class="wrap">
+      <div class="prose prose--city">
+        {art}
+      </div>
+    </div>
+  </section>
+""" + (about_block if DEP == "main" else "")
+    else:
+        city_block = about_block
 
     return (head(
         meta.get("title") or f"Туры в {CITY['name']} из {CITY['from']} — ДАЛЬТУР",
@@ -660,11 +673,11 @@ def build_index() -> str:
       <ul class="marks">
         <li class="mark">
           <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="3" width="14" height="11" rx="2.5" stroke="#A7211A" stroke-width="1.4"/><path d="M3 9h14M6.5 17v-3M13.5 17v-3" stroke="#A7211A" stroke-width="1.4" stroke-linecap="round"/><circle cx="6.5" cy="11.5" r=".9" fill="#A7211A"/><circle cx="13.5" cy="11.5" r=".9" fill="#A7211A"/></svg>
-          Рейсовый автобус 100%!
+          Рейсовый автобус 100%
         </li>
         <li class="mark">
           <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7.5" stroke="#A7211A" stroke-width="1.4"/><path d="M10 6v4.3l2.8 1.7" stroke="#A7211A" stroke-width="1.4" stroke-linecap="round"/></svg>
-          Выезды ежедневно!
+          Выезды ежедневно
         </li>
       </ul>
     </div>
@@ -673,7 +686,7 @@ def build_index() -> str:
 {city_block}"""
         # D4, D6: «рады проконсультировать», без оговорки про праздники (D5)
         + contacts(
-            "Всегда рады вас проконсультировать в WhatsApp",
+            "Всегда рады вас проконсультировать",   # 634109: кнопки WhatsApp и Telegram рядом
             # 633807: формулировка заказчика
             "Стоимость тура зависит от даты выезда, категории отеля 3*, 4*, 5* "
             "и количества дней.",
@@ -815,9 +828,9 @@ def build_page(pg: dict) -> str:
         проводят медицинские организации Китая.</p>
         <p>Информация на сайте носит ознакомительный характер и не является
         медицинской консультацией, постановкой диагноза или назначением
-        лечения. Решение о лечении и процедурах принимает врач после
-        консультации и обследования. Стоимость, сроки и программу лечения
-        определяет клиника.</p>
+        лечения. Решение о лечении и процедурах пациент принимает после
+        консультации и обследования у врача. Стоимость, сроки и программу
+        лечения определяет клиника.</p>
         <p>Перед поездкой рекомендуем проконсультироваться с лечащим врачом.</p>
       </div>
     </div>
@@ -843,7 +856,7 @@ def build_page(pg: dict) -> str:
 # на странице свои блоки контактов.
 DAY_RE = re.compile(r"^(\d+) день — (.+)$")
 PRICE_RE = re.compile(r"^(.+?) — (примерно .+)$")
-SKIP = ("ДАЛЬТУР", "☎️", "Звонки + WhatsApp")
+SKIP = ("ДАЛЬТУР", "☎️", "📞", "Звонки + WhatsApp")
 # 633938: «дополнительные экскурсии — во множественном числе»
 PLURAL = [("другую дополнительную экскурсионную программу", "другие дополнительные экскурсионные программы"),
           ("дополнительную экскурсионную программу", "дополнительные экскурсионные программы"),
@@ -856,10 +869,11 @@ def tour_text(d: int) -> dict | None:
         return None
     raw = pathlib.Path(path).read_text(encoding="utf-8")
     for one, many in PLURAL:
-        raw = raw.replace(one, many)
+        # «…экскурсию «Вечерний Хуньчунь»» — названная экскурсия остаётся в единственном
+        raw = re.sub(re.escape(one) + r"(?!\s*«)", many, raw)
     lines = [l.strip() for l in raw.splitlines() if l.strip()]
-    t = {"intro_h": "", "intro": [], "days": [], "exc_h": "", "exc_intro": [],
-         "exc": [], "exc_note": "", "outro_h": "", "outro": []}
+    t = {"intro_h": "", "intro": [], "pre_h": "", "pre": [], "days": [], "exc_h": "",
+         "exc_intro": [], "exc": [], "exc_note": "", "outro_h": "", "outro": []}
     part = "title"
     for l in lines:
         if l.startswith(SKIP) and not l.startswith("ДАЛЬТУР —") and part != "days":
@@ -872,8 +886,12 @@ def tour_text(d: int) -> dict | None:
             t["intro_h"] = l; part = "intro"; continue
         if l.startswith("Программа тура"):
             part = "days"; continue
+        # Хабаровск: до программы — «Выезд из Хабаровска» (поезд до Уссурийска)
+        if part == "intro" and l.startswith("Выезд из "):
+            t["pre_h"] = l; part = "pre"; continue
         m = DAY_RE.match(l)
-        if m and part in ("days",):
+        if m and part in ("days", "intro", "pre"):
+            part = "days"
             t["days"].append([m.group(2), []]); continue
         if l.startswith("Экскурсии за дополнительную плату"):
             t["exc_h"] = l; part = "exc"; continue
@@ -883,15 +901,26 @@ def tour_text(d: int) -> dict | None:
             t["outro_h"] = l; part = "outro"; continue
         if part == "intro":
             t["intro"].append(l)
+        elif part == "pre":
+            t["pre"].append(l)
         elif part == "days" and t["days"]:
             t["days"][-1][1].append(l)
         elif part == "exc":
+            # 634132: цены экскурсий не показываем — зависят от сезона и дат
             pm = PRICE_RE.match(l)
-            (t["exc"].append((pm.group(1), pm.group(2))) if pm else t["exc_intro"].append(l))
+            if pm:
+                t["exc"].append((pm.group(1), ""))
+            else:
+                l = re.sub(r"\s*(Ниже указана|Указана) примерная стоимость[^.]*\.", "", l).strip()
+                if l:
+                    t["exc_intro"].append(l)
         elif part == "outro":
             t["outro"].append(l)
     if len(t["days"]) != d:
         raise SystemExit(f"{path}: дней в тексте {len(t['days'])}, а в туре {d}")
+    t["exc_h"] = t["exc_h"].replace(" — примерная стоимость", "")
+    if t["exc_note"]:
+        t["exc_note"] = "Важно: состав дополнительных экскурсионных программ является ориентировочным и может изменяться."
     return t
 
 
@@ -941,6 +970,11 @@ def build_tour(d: int, n: int) -> str:
 
     videos = video_cards(d)
 
+    pre_block = ""
+    if text and text["pre"]:
+        pre_block = (f'<div class="day-pre"><b>{esc(text["pre_h"])}</b>'
+                     + "".join(f"<p>{esc(p)}</p>" for p in text["pre"]) + "</div>")
+
     intro_block = exc_block = outro_block = ""
     if text:
         intro_block = f"""
@@ -954,9 +988,9 @@ def build_tour(d: int, n: int) -> str:
   </section>
 """
         items = "\n".join(
-            f'          <li><span>{esc(name)}</span><b>{esc(price)}</b></li>'
-            for name, price in text["exc"])
-        exc_block = f"""
+            f'          <li><span>{esc(name)}</span></li>'
+            for name, _ in text["exc"])
+        exc_block = "" if not text["exc"] else f"""
   <section class="section" id="ekskursii">
     <div class="wrap">
       <div class="section__head"><h2>{esc(text["exc_h"])}</h2></div>
@@ -968,7 +1002,7 @@ def build_tour(d: int, n: int) -> str:
     </div>
   </section>
 """
-        outro_block = f"""
+        outro_block = "" if not text["outro"] else f"""
   <section class="section">
     <div class="wrap">
       <div class="prose">
@@ -1023,8 +1057,8 @@ def build_tour(d: int, n: int) -> str:
       <!-- F1, F2: без «Дороги» и «Времени выезда». F3: только длительность и питание. -->
       <dl class="facts facts--three">
         <div class="fact"><dt>Длительность</dt><dd>{lbl}</dd></div>
-        <div class="fact"><dt>Питание</dt><dd>Завтраки</dd></div>
-        <div class="fact fact--gift"><dt>Экскурсии в подарок</dt><dd>Чайная церемония и<br>кулинарное шоу</dd></div>
+        <div class="fact"><dt>Питание</dt><dd>Завтрак</dd></div>
+        <div class="fact fact--gift"><dt>Экскурсии в подарок</dt><dd><span class="gift">Чайная церемония {IC_TEAPOT}</span><span class="gift">Кулинарное шоу {IC_TAKEOUT}</span></dd></div>
       </dl>
     </div>
   </section>
@@ -1032,6 +1066,7 @@ def build_tour(d: int, n: int) -> str:
   <section class="section" id="programma">
     <div class="wrap">
       <div class="section__head"><h2>Программа тура в {CITY['name']}</h2></div>
+      {pre_block}
       <div class="days">
 {chr(10).join(days)}
       </div>
