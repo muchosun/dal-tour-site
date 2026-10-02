@@ -700,10 +700,15 @@ def esc(s: str) -> str:
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
+def no_years(text: str) -> str:
+    """634139: «2026 и года всегда убирай» — тексты не должны устаревать."""
+    return re.sub(r"\s+в\s+20\d{2}\s+году", "", text)
+
+
 def render_md(name: str) -> tuple:
     """Очень простой markdown: # заголовок, ## подзаголовок, - список, абзацы.
     Возвращает (h1, html остального текста)."""
-    raw = pathlib.Path(os.path.join(HERE, "content", name)).read_text(encoding="utf-8")
+    raw = no_years(pathlib.Path(os.path.join(HERE, "content", name)).read_text(encoding="utf-8"))
     h1, parts = "", []
     for block in raw.split("\n\n"):
         b = block.strip()
@@ -867,7 +872,7 @@ def tour_text(d: int) -> dict | None:
     path = os.path.join(HERE, "content", "tours", DEP, f"{d}.txt")
     if not os.path.exists(path):
         return None
-    raw = pathlib.Path(path).read_text(encoding="utf-8")
+    raw = no_years(pathlib.Path(path).read_text(encoding="utf-8"))
     for one, many in PLURAL:
         # «…экскурсию «Вечерний Хуньчунь»» — названная экскурсия остаётся в единственном
         raw = re.sub(re.escape(one) + r"(?!\s*«)", many, raw)
