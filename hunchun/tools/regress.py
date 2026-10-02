@@ -11,7 +11,7 @@ SITES = {   # хост → черновик (должен быть noindex)
     "stomatologiya.hunchun-hunchun.ru": False,
     "lechenie-v-kitae.hunchun-hunchun.ru": False,
     "ussuriysk.hunchun-hunchun.ru": False,
-    "habarovsk.hunchun-hunchun.ru": True,
+    "habarovsk.hunchun-hunchun.ru": False,
 }
 UA = {"User-Agent": "Mozilla/5.0 (regress)"}
 SKIP_EXT = ("dental.",)          # у разработчика провайдер режет «dental» — проверяем снаружи
