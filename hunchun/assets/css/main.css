@@ -806,7 +806,7 @@ body.has-stickybar { padding-bottom: 88px; }
   .header__phone a { font-size: 19px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
   .header__phone span { font-size: 11px; color: var(--muted-2); }
   .header__contacts .btn { min-height: 48px; padding: 0 22px; border-radius: var(--r-btn); font-size: 15px; }
-  .header__wa-mobile { display: none; }
+  .header__msgr-mobile, .hero__phone { display: none !important; }
 
   .section { padding-top: 72px; }
   .section__head h2 { font-size: 32px; }
@@ -1357,3 +1357,49 @@ a.video__frame:hover .video__play { color: var(--red); }
 .day-pre b { font-size: 15px; }
 .day-pre p { margin-top: 6px; font-size: 14px; line-height: 1.6; color: var(--muted); }
 .facts--three { align-items: stretch; }
+
+/* 634299–634301: на телефоне сразу номер и оба мессенджера; на десктопе всё это в шапке */
+.header__msgr-mobile { display: flex; gap: 8px; }
+@media (max-width: 1099px) {
+  /* бургер | логотип строго по центру | мессенджеры */
+  .header .wrap { display: grid; grid-template-columns: 1fr auto 1fr; }
+  .header__burger { justify-self: start; }
+  .header__center { justify-content: center; }
+  .header__msgr-mobile { justify-self: end; }
+}
+@media (max-width: 399px) {
+  .header .logo { font-size: 17px; }
+  .header__msgr-mobile { gap: 6px; }
+  .header__msgr-mobile .icon-btn { width: 40px; height: 40px; }
+}
+.hero__phone {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.hero__phone svg { color: var(--red); }
+
+/* 634292–634293: цифра у дня — по ней проще листать */
+.day__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.day__ord { display: inline-flex; align-items: center; }
+
+/* «С радостью вас проконсультируем» в конце статьи */
+.prose__contacts a { color: var(--red-deep); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }

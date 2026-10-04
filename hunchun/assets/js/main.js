@@ -46,6 +46,18 @@
   /* Видео: плеер Дзена по клику. До нажатия — только превью. */
   // Превью — ссылка на Дзен. Обычный клик запускает плеер прямо на странице,
   // клик с Ctrl/Cmd/Shift или средней кнопкой — как у ссылки, новая вкладка.
+  // 634270: после перехода к разделу (#tury, #kontakty…) убираем хвост из адреса —
+  // ссылкой делятся без «#tury». Прокрутка к разделу остаётся.
+  function cleanHash() {
+    var strip = function () {
+      if (location.hash && history.replaceState) {
+        history.replaceState(null, '', location.pathname + location.search);
+      }
+    };
+    if (location.hash) setTimeout(strip, 400);
+    window.addEventListener('hashchange', function () { setTimeout(strip, 400); });
+  }
+
   function initVideos() {
     Array.prototype.forEach.call(document.querySelectorAll('.video[data-embed]'), function (card) {
       var frame = card.querySelector('.video__frame');
@@ -78,5 +90,6 @@
     initDrawer();
     initYear();
     initVideos();
+    cleanHash();
   });
 })();

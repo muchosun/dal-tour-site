@@ -310,6 +310,11 @@ IC_TEAPOT = ('<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"
              'c-.252-.22-.42-.53-.42-.865v-.618c0-.489.354-.903.843-.92C5.878 9.887 7.663 9.996 9 11c2 1.5 3 6 3 6M9 41h28m2-16a5 5 0 1 0-4.584-7"/></g></svg>')
 IC_TAKEOUT = ('<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" '
               'd="M4.625 10L2 7.45l1.4-1.4L5 7.65l-.05-.6L9 3h6l4.05 4.05l-.05.6l1.6-1.6l1.4 1.4L19.375 10zM5.95 20l-.65-8.45h13.4L18.05 20z"/></svg>')
+# завтрак — миска с палочками (Tabler, MIT), в пару к подарочным
+IC_BOWL = ('<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20 10a2 2 0 0 1 2 '
+           '2v.5c0 1.694-2.247 5.49-3.983 6.983l-.017.013V20a2 2 0 0 1-1.85 1.995L16 22H8a2 2 0 0 1-2-2v-.496l-.065-.053c-1.76-1.496'
+           '-3.794-4.965-3.928-6.77L2 12.5V12a2 2 0 0 1 2-2zm-1.071-3.997a1 1 0 1 1 .142 1.994l-14 1a1 1 0 1 1-.142-1.994zm-.139-4.981a1 '
+           '1 0 1 1 .42 1.956l-14 3a1 1 0 1 1-.42-1.956z"/></svg>')
 IC_ARROW = ('<svg width="14" height="12" viewBox="0 0 14 12" fill="none" aria-hidden="true">'
             '<path d="M1 6h11M8 2l4 4-4 4" stroke="currentColor" stroke-width="1.6"'
             ' stroke-linecap="round" stroke-linejoin="round"/></svg>')
@@ -500,7 +505,7 @@ def header(base: str = "") -> str:
     <div class="header__contacts">
       <span class="header__phone">
         <a href="tel:{PHONE_MAIN_TEL}">{PHONE_MAIN_HUMAN}</a>
-        <span>Единая справочная и WhatsApp</span>
+        <span>Звонки и мессенджеры</span>
       </span>
       <span class="msgr">
         <a class="btn btn--primary" href="{wa_href}" target="_blank" rel="noopener">{IC_WA} WhatsApp</a>
@@ -508,7 +513,10 @@ def header(base: str = "") -> str:
       </span>
     </div>
 
-    <a class="icon-btn icon-btn--accent header__wa-mobile" href="{wa_href}" target="_blank" rel="noopener" aria-label="Написать в WhatsApp">{IC_WA}</a>
+    <span class="header__msgr-mobile">
+      <a class="icon-btn icon-btn--tg" href="{TG_LINK}" target="_blank" rel="noopener" aria-label="Написать в Telegram">{IC_TG}</a>
+      <a class="icon-btn icon-btn--accent" href="{wa_href}" target="_blank" rel="noopener" aria-label="Написать в WhatsApp">{IC_WA}</a>
+    </span>
   </div>
 </header>
 
@@ -538,6 +546,10 @@ def header(base: str = "") -> str:
 
 
 def footer(base: str = "", tail: str = "") -> str:
+    # 634296: сайты городов отправления видны со всех сайтов — и людям, и поисковикам
+    departures_links = "\n".join(
+        f'          <li><a href="https://{dep["host"]}/">Из {dep["from"]}</a></li>'
+        for dep in DEPARTURES.values())
     tours_links = "\n".join(
         f'          <li><a href="{tour_url(d, base)}">{label(d, n)}</a></li>'
         for d, n in TOURS)
@@ -558,6 +570,12 @@ def footer(base: str = "", tail: str = "") -> str:
         <h3>ТУРЫ В {CITY['name'].upper()}</h3>
         <ul>
 {tours_links}
+        </ul>
+      </div>
+      <div class="footer__col">
+        <h3>ВЫЕЗДЫ В {CITY['name'].upper()}</h3>
+        <ul>
+{departures_links}
         </ul>
       </div>
       <div class="footer__col">
@@ -655,6 +673,7 @@ def build_index() -> str:
     <div class="wrap">
       <h1>Туры в {CITY['name']} <br class="br-desktop">из {CITY['from']}</h1>
       <p class="hero__lead">{CITY['lead']}</p>
+      <a class="hero__phone" href="tel:{PHONE_MAIN_TEL}">{IC_PHONE} {PHONE_MAIN_HUMAN}</a>
     </div>
   </section>
 
@@ -673,7 +692,7 @@ def build_index() -> str:
       <ul class="marks">
         <li class="mark">
           <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="3" width="14" height="11" rx="2.5" stroke="#A7211A" stroke-width="1.4"/><path d="M3 9h14M6.5 17v-3M13.5 17v-3" stroke="#A7211A" stroke-width="1.4" stroke-linecap="round"/><circle cx="6.5" cy="11.5" r=".9" fill="#A7211A"/><circle cx="13.5" cy="11.5" r=".9" fill="#A7211A"/></svg>
-          Рейсовый автобус 100%
+          Рейсовый автобус
         </li>
         <li class="mark">
           <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7.5" stroke="#A7211A" stroke-width="1.4"/><path d="M10 6v4.3l2.8 1.7" stroke="#A7211A" stroke-width="1.4" stroke-linecap="round"/></svg>
@@ -713,6 +732,13 @@ def render_md(name: str) -> tuple:
     for block in raw.split("\n\n"):
         b = block.strip()
         if not b:
+            continue
+        if b == "[[contacts]]":   # 634273, 634277: вместо «Сайт: dal-tour.ru»
+            parts.append(
+                '<p class="prose__contacts">С радостью вас проконсультируем: '
+                f'<a href="tel:{PHONE_MAIN_TEL}">{PHONE_MAIN_HUMAN}</a>, '
+                f'<a href="{wa("Здравствуйте! Подскажите по турам в Хуньчунь.")}" target="_blank" rel="noopener">WhatsApp</a>, '
+                f'<a href="{TG_LINK}" target="_blank" rel="noopener">Telegram</a>.</p>')
             continue
         if b.startswith("# "):
             h1 = esc(b[2:].strip())
@@ -948,7 +974,7 @@ def build_tour(d: int, n: int) -> str:
                 else f"<p>{esc(r)}</p>" for r in rows)
             days.append(f"""        <article class="day">
           <div class="day__head">
-            <span class="day__ord">{ORDINALS[i]} день</span>
+            <span class="day__ord"><b class="day__num">{i}</b>{ORDINALS[i]} день</span>
             <h3 class="day__title">{esc(title)}</h3>
           </div>
           {body}
@@ -967,7 +993,7 @@ def build_tour(d: int, n: int) -> str:
             body = "[ПРОГРАММА ДНЯ и экскурсии. Текст пришлёт заказчик.]"
         days.append(f"""        <article class="day">
           <div class="day__head">
-            <span class="day__ord">{ORDINALS[i]} день</span>
+            <span class="day__ord"><b class="day__num">{i}</b>{ORDINALS[i]} день</span>
             <h3 class="day__title">{title}</h3>
           </div>
           <p>{body}</p>
@@ -1062,7 +1088,7 @@ def build_tour(d: int, n: int) -> str:
       <!-- F1, F2: без «Дороги» и «Времени выезда». F3: только длительность и питание. -->
       <dl class="facts facts--three">
         <div class="fact"><dt>Длительность</dt><dd>{lbl}</dd></div>
-        <div class="fact"><dt>Питание</dt><dd>Завтрак</dd></div>
+        <div class="fact"><dt>Питание</dt><dd><span class="gift">Завтрак {IC_BOWL}</span></dd></div>
         <div class="fact fact--gift"><dt>Экскурсии в подарок</dt><dd><span class="gift">Чайная церемония {IC_TEAPOT}</span><span class="gift">Кулинарное шоу {IC_TAKEOUT}</span></dd></div>
       </dl>
     </div>
