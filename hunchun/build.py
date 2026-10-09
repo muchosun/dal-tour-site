@@ -46,6 +46,16 @@ DEPARTURES = {
            "draft": False},   # 02.10: все 10 туров и SEO-статья от заказчика
 }
 DEP = "main"   # какой город сейчас собираем; переключает build_dist()
+
+# Яндекс Вебмастер (09.10, аккаунт заказчика): файл yandex_<код>.html в корне
+# каждого сайта. d1b30112… пришёл без адреса — первой попыткой для основного.
+YANDEX_VERIFY = {
+    "main": ["f2d25729c530a990", "d1b30112af757a65"],
+    "stoma": ["eb8a431df47f4a81"],
+    "lech": ["d9e32f93d1e8d92e"],
+    "us": ["1eb4fa5656f95d38"],
+    "hb": ["ff71dcaafb304a68"],
+}
 MIRROR = "xn----ytbaba5abcbmfug6dded.xn--p1ai"   # хуньчунь-хуньчунь.рф в punycode
 
 # python3 build.py          — превью, всё в одной папке, ссылки относительные
@@ -1206,6 +1216,12 @@ def build_dist() -> list:
 
         # GitHub Pages иначе прогонит файлы через Jekyll
         open(os.path.join(root, ".nojekyll"), "w").close()
+
+        for code in YANDEX_VERIFY.get(key, []):
+            with open(os.path.join(root, f"yandex_{code}.html"), "w", encoding="utf-8") as fh:
+                fh.write('<html>\n    <head>\n        <meta http-equiv="Content-Type" '
+                         'content="text/html; charset=UTF-8">\n    </head>\n'
+                         f'    <body>Verification: {code}</body>\n</html>\n')
 
         # sitemap и robots — чтобы поисковики сразу нашли все страницы.
         # Host: не пишем: Яндекс отказался от директивы в 2018, главное зеркало
