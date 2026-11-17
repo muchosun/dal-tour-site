@@ -1155,6 +1155,12 @@ def set_departure(key: str) -> None:
     HOSTS["main"] = dep["host"]
 
 
+MIRRORS = {
+    "rf": "яньцзи-яньцзи.рф".encode("idna").decode(),   # 637147: правильное написание
+    "rf-yanczy": "янцзы-янцзы.рф".encode("idna").decode(),  # 637149: как ищут; позже свой контент
+}
+
+
 def build_dist() -> list:
     """Отдельный корень под каждый домен: у каждого свой CNAME."""
     out = []
@@ -1232,6 +1238,8 @@ def build_dist() -> list:
             fh.write(f"User-agent: *\nAllow: /\n\nSitemap: https://{host}/sitemap.xml\n")
 
     set_departure("main")
+    for key, host in MIRRORS.items():
+        out.append(build_mirror(key, host))
 
     return out
 
@@ -1244,7 +1252,7 @@ def redirect_page(target: str) -> str:
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>ДАЛЬТУР — туры в Хуньчунь</title>
+<title>ДАЛЬТУР — туры в {CITY['name']}</title>
 <link rel="canonical" href="{target}">
 <meta http-equiv="refresh" content="0; url={target}">
 <script>location.replace("{target}" + location.search + location.hash)</script>
@@ -1254,9 +1262,10 @@ def redirect_page(target: str) -> str:
 """
 
 
-def build_mirror() -> str:
-    """хуньчунь-хуньчунь.рф → hunchun-hunchun.ru, каждая страница на свою."""
-    root = os.path.join(DIST, "rf")
+def build_mirror(key: str, host: str) -> str:
+    """Зеркало на .рф: каждая страница уводит на ту же страницу основного
+    домена (637145–637149: яньцзи-яньцзи.рф и янцзы-янцзы.рф → yanji-yanji.ru)."""
+    root = os.path.join(DIST, key)
     os.makedirs(root, exist_ok=True)
     for name in os.listdir(root):
         if name != ".git":
@@ -1273,12 +1282,12 @@ def build_mirror() -> str:
             f'location.replace("{main_root}/" + location.search + location.hash)',
             f'location.replace("{main_root}" + location.pathname + location.search + location.hash)'))
     with open(os.path.join(root, "CNAME"), "w", encoding="utf-8") as fh:
-        fh.write(MIRROR + "\n")
+        fh.write(host + "\n")
     open(os.path.join(root, ".nojekyll"), "w").close()
     # Без Sitemap: в карте зеркала не может быть адресов чужого домена
     with open(os.path.join(root, "robots.txt"), "w", encoding="utf-8") as fh:
         fh.write("User-agent: *\nAllow: /\n")
-    return f"dist/rf/ — {MIRROR} → {HOSTS['main']}, {len(pages)} страниц-редиректов"
+    return f"dist/{key}/ — {host} → {HOSTS['main']}, {len(pages)} страниц-редиректов"
 
 
 def build_www() -> str:
