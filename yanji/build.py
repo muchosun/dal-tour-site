@@ -76,6 +76,8 @@ def site_url(key: str, path: str = "") -> str:
 CITY = {
     "name": "Яньцзи",
     "name_pre": "Яньцзи",         # не склоняется
+    # 637093: «90% по Вордстату пишут ЯНЦЗЫ» — в тайтлах и заголовке оба написания
+    "name_seo": "Яньцзи (Янцзы)",
     "hiero": "延吉",
     "from": "Владивостока",
     "from_gen": "Владивосток",    # именительный, для строк «Владивосток — Хуньчунь»
@@ -447,8 +449,6 @@ def header(base: str = "") -> str:
 
     <nav class="header__nav" aria-label="Основная навигация">
       <a href="{site_url("main", "#tury")}">Все туры</a>
-      <a href="{site_url("stoma")}">Стоматология</a>
-      <a href="{site_url("lech")}">Лечение</a>
       <a href="{site_url("main", "#kontakty")}">Контакты</a>
     </nav>
 
@@ -482,8 +482,6 @@ def header(base: str = "") -> str:
     <a href="{site_url("main")}">Главная</a>
     <a href="{site_url("main", "#tury")}">Все туры</a>
     {f'<a href="{site_url("main", "#o-gorode")}">О городе</a>' if HAS_ABOUT else ""}
-    <a href="{site_url("stoma")}">Стоматология</a>
-    <a href="{site_url("lech")}">Лечение</a>
     <a href="{site_url("main", "#kontakty")}">Контакты</a>
     <div class="drawer__contacts">
       <a class="btn btn--primary" href="{wa_href}" target="_blank" rel="noopener">{IC_WA} Спросить в WhatsApp</a>
@@ -602,9 +600,9 @@ def build_index() -> str:
         city_block = about_block
 
     return (head(
-        meta.get("title") or f"Туры в {CITY['name']} из {CITY['from']} — ДАЛЬТУР",
+        meta.get("title") or f"Туры в {CITY['name_seo']} из {CITY['from']} — ДАЛЬТУР",
         meta.get("desc") or
-        f"Туры в {CITY['name']} из {CITY['from']} от {first} до {last} дней. "
+        f"Туры в {CITY['name_seo']} из {CITY['from']} от {first} до {last} дней. "
         f"Программа тура, выезды ежедневно. "
         f"Звоните {PHONE_MAIN_HUMAN} или пишите в WhatsApp.",
         canonical=canon("main"),
@@ -622,7 +620,7 @@ def build_index() -> str:
   <!-- A1: без слова «туроператор». A3–A5: ни кнопок, ни фактов, ни фото. -->
   <section class="hero hero--lean">
     <div class="wrap">
-      <h1>Туры в {CITY['name']} <br class="br-desktop">из {CITY['from']}</h1>
+      <h1>Туры в {CITY['name_seo']} <br class="br-desktop">из {CITY['from']}</h1>
       <p class="hero__lead">{CITY['lead']}</p>
       <a class="hero__phone" href="tel:{PHONE_MAIN_TEL}">{IC_PHONE} {PHONE_MAIN_HUMAN}</a>
     </div>
@@ -1039,12 +1037,12 @@ def build_tour(d: int, n: int) -> str:
         for od, on in TOURS if od != d)
 
     return (head(
-        f"Тур в {CITY['name']} {lbl} из {CITY['from']} — ДАЛЬТУР",
-        f"Тур в {CITY['name']} на {lbl} из {CITY['from']}: программа по дням, "
+        f"Тур в {CITY['name_seo']} {lbl} из {CITY['from']} — ДАЛЬТУР",
+        f"Тур в {CITY['name_seo']} на {lbl} из {CITY['from']}: программа по дням, "
         f"выезды ежедневно. Стоимость уточняйте по телефону {PHONE_MAIN_HUMAN}.",
         sticky=True, canonical=canon("main", slug(d)),
         ld=[org_ld(),
-            {"@type": "TouristTrip", "name": f"Тур в {CITY['name']} из {CITY['from']} — {lbl}",
+            {"@type": "TouristTrip", "name": f"Тур в {CITY['name_seo']} из {CITY['from']} — {lbl}",
              "description": " ".join(text["intro"]) if text else
                             f"Автобусный тур в {CITY['name']} из {CITY['from']} на {lbl}.",
              "url": canon("main", slug(d)), "touristType": "Автобусный тур",
