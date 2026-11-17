@@ -1403,3 +1403,4 @@ a.video__frame:hover .video__play { color: var(--red); }
 
 /* «С радостью вас проконсультируем» в конце статьи */
 .prose__contacts a { color: var(--red-deep); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.prose__list a, .prose p a { color: var(--red-deep); text-decoration: underline; text-underline-offset: 3px; }

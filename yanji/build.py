@@ -76,8 +76,9 @@ def site_url(key: str, path: str = "") -> str:
 CITY = {
     "name": "Яньцзи",
     "name_pre": "Яньцзи",         # не склоняется
-    # 637093: «90% по Вордстату пишут ЯНЦЗЫ» — в тайтлах и заголовке оба написания
-    "name_seo": "Яньцзи (Янцзы)",
+    # 637093: «90% по Вордстату пишут ЯНЦЗЫ» — в тайтлах и заголовке оба написания;
+    # 637110: порядок как в SEO заказчика — «Янцзы (Яньцзи)»
+    "name_seo": "Янцзы (Яньцзи)",
     "hiero": "延吉",
     "from": "Владивостока",
     "from_gen": "Владивосток",    # именительный, для строк «Владивосток — Хуньчунь»
@@ -607,7 +608,7 @@ def build_index() -> str:
         f"Звоните {PHONE_MAIN_HUMAN} или пишите в WhatsApp.",
         canonical=canon("main"),
         ld=[org_ld(),
-            {"@type": "WebSite", "name": "ДАЛЬТУР — туры в Хуньчунь", "url": canon("main"),
+            {"@type": "WebSite", "name": f"ДАЛЬТУР — туры в {CITY['name']}", "url": canon("main"),
              "inLanguage": "ru", "publisher": {"@id": SITE_ROOT + "#org"}},
             {"@type": "ItemList", "name": f"Туры в {CITY['name']} из {CITY['from']}",
              "itemListElement": [{"@type": "ListItem", "position": i, "url": canon("main", slug(dd)),
@@ -620,7 +621,7 @@ def build_index() -> str:
   <!-- A1: без слова «туроператор». A3–A5: ни кнопок, ни фактов, ни фото. -->
   <section class="hero hero--lean">
     <div class="wrap">
-      <h1>Туры в {CITY['name_seo']} <br class="br-desktop">из {CITY['from']}</h1>
+      <h1>{esc(meta["h1"]) if meta.get("h1") else f"Туры в {CITY['name_seo']} <br class=\"br-desktop\">из {CITY['from']}"}</h1>
       <p class="hero__lead">{CITY['lead']}</p>
       <a class="hero__phone" href="tel:{PHONE_MAIN_TEL}">{IC_PHONE} {PHONE_MAIN_HUMAN}</a>
     </div>
@@ -673,9 +674,25 @@ def no_years(text: str) -> str:
     return re.sub(r"\s+в\s+20\d{2}\s+году", "", text)
 
 
+MD_LINK = re.compile(r"\[([^\]]+)\]\(tour:(\d+)\)")
+
+
+def md_inline(s: str) -> str:
+    """Экранирует текст и превращает [текст](tour:5) в ссылку на программу
+    тура (637113: перелинковка статьи с программами). Адрес берётся из slug(),
+    поэтому не разойдётся с именами файлов; несуществующий тур — ошибка сборки."""
+    def link(m: re.Match) -> str:
+        d = int(m.group(2))
+        if d not in {dd for dd, _ in TOURS}:
+            raise SystemExit(f"ссылка на несуществующий тур: {m.group(0)}")
+        return f'<a href="{slug(d)}">{m.group(1)}</a>'
+    return MD_LINK.sub(link, esc(s))
+
+
 def render_md(name: str) -> tuple:
     """Очень простой markdown: # заголовок, ## подзаголовок, - список, абзацы.
     Возвращает (h1, html остального текста)."""
+    WA_HELLO = f"Здравствуйте! Подскажите по турам в {CITY['name']}."
     raw = no_years(pathlib.Path(os.path.join(HERE, "content", name)).read_text(encoding="utf-8"))
     h1, parts = "", []
     for block in raw.split("\n\n"):
@@ -686,7 +703,7 @@ def render_md(name: str) -> tuple:
             parts.append(
                 '<p class="prose__contacts">С радостью вас проконсультируем: '
                 f'<a href="tel:{PHONE_MAIN_TEL}">{PHONE_MAIN_HUMAN}</a>, '
-                f'<a href="{wa("Здравствуйте! Подскажите по турам в Хуньчунь.")}" target="_blank" rel="noopener">WhatsApp</a>, '
+                f'<a href="{wa(WA_HELLO)}" target="_blank" rel="noopener">WhatsApp</a>, '
                 f'<a href="{TG_LINK}" target="_blank" rel="noopener">Telegram</a>.</p>')
             continue
         if b.startswith("# "):
@@ -696,11 +713,11 @@ def render_md(name: str) -> tuple:
         elif b.startswith("## "):
             parts.append(f"<h2>{esc(b[3:].strip())}</h2>")
         elif b.startswith("- "):
-            items = "".join(f"<li>{esc(l[2:].strip())}</li>"
+            items = "".join(f"<li>{md_inline(l[2:].strip())}</li>"
                             for l in b.split("\n") if l.strip().startswith("- "))
             parts.append(f"<ul class=\"prose__list\">{items}</ul>")
         else:
-            parts.append(f"<p>{esc(' '.join(b.split()))}</p>")
+            parts.append(f"<p>{md_inline(' '.join(b.split()))}</p>")
     return h1, "\n        ".join(parts)
 
 
