@@ -1404,3 +1404,9 @@ a.video__frame:hover .video__play { color: var(--red); }
 /* «С радостью вас проконсультируем» в конце статьи */
 .prose__contacts a { color: var(--red-deep); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .prose__list a, .prose p a { color: var(--red-deep); text-decoration: underline; text-underline-offset: 3px; }
+.tour-other{margin-top:24px;}.tour-other__title{font-size:16px;font-weight:600;color:var(--ink);}
+/* 637169: в шапке «Туры в Хуньчунь» вместо «ДАЛЬТУР» — на узких экранах в две строки */
+.header .logo{white-space:nowrap;}
+@media (max-width: 399px){.header .logo{display:block;max-width:112px;white-space:normal;text-align:center;font-size:15px;line-height:1.05;}}
+@media (min-width: 400px) and (max-width: 1099px){.header .logo{font-size:16px;}}
+@media (min-width: 1100px) and (max-width: 1279px){.header .logo{font-size:20px;}}

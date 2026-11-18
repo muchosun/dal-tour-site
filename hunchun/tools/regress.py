@@ -12,7 +12,19 @@ SITES = {   # хост → черновик (должен быть noindex)
     "lechenie-v-kitae.hunchun-hunchun.ru": False,
     "ussuriysk.hunchun-hunchun.ru": False,
     "habarovsk.hunchun-hunchun.ru": False,
+    "yanji-yanji.ru": False,
+    "ussuriysk.yanji-yanji.ru": False,
+    "habarovsk.yanji-yanji.ru": False,
 }
+# зеркала: каждая страница — мгновенный редирект на ту же страницу основного сайта
+MIRRORS = {
+    "xn----ytbaba5abcbmfug6dded.xn--p1ai": "hunchun-hunchun.ru",   # хуньчунь-хуньчунь.рф
+    "xn----mtbbcczd2ee8cf2ag.xn--p1ai": "yanji-yanji.ru",          # яньцзи-яньцзи.рф
+    "xn----mtbbvc5cd1be5af.xn--p1ai": "yanji-yanji.ru",            # янцзы-янцзы.рф
+    "dental.hunchun-hunchun.ru": "stomatologiya.hunchun-hunchun.ru",
+    "clinic.hunchun-hunchun.ru": "lechenie-v-kitae.hunchun-hunchun.ru",
+}
+PAGES = ["", "tur-3-dnya.html", "tur-4-dnya.html"] + [f"tur-{d}-dney.html" for d in range(5, 11)]
 UA = {"User-Agent": "Mozilla/5.0 (regress)"}
 SKIP_EXT = ("dental.",)          # у разработчика провайдер режет «dental» — проверяем снаружи
 ASSET = (".css", ".js", ".woff2", ".jpg", ".png", ".svg", ".webp", ".ico")
@@ -94,5 +106,32 @@ for host, draft in SITES.items():
     report.append(f"{host}/sitemap.xml: {st}, адресов {len(locs)}, битых {len(bad)}")
     if draft and locs:
         problems.append(f"{host}: у черновика непустой sitemap")
+for mirror, main in MIRRORS.items():
+    if any(x in mirror for x in SKIP_EXT):
+        continue
+    pages = [""] if main.startswith(("stomatologiya.", "lechenie")) else PAGES
+    bad = 0
+    for pg in pages:
+        st, body = fetch(f"https://{mirror}/{pg}")
+        target = (re.findall(r'rel="canonical" href="([^"]*)"', body) or [""])[0]
+        if st != 200 or not target.startswith(f"https://{main}/") or fetch(target)[0] != 200:
+            bad += 1
+            problems.append(f"зеркало {mirror}/{pg}: {st} → {target or 'нет canonical'}")
+    report.append(f"зеркало {mirror} → {main}: страниц {len(pages)}, битых {bad}")
+# http → https: GitHub отдаёт 301, только если включено «Enforce HTTPS»
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *a, **k):
+        return None
+opener = urllib.request.build_opener(NoRedirect)
+for host in list(SITES) + [m for m in MIRRORS if not any(x in m for x in SKIP_EXT)]:
+    try:
+        opener.open(urllib.request.Request(f"http://{host}/", headers=UA), timeout=20)
+        problems.append(f"http://{host}/ не перенаправляет на https")
+    except urllib.error.HTTPError as e:
+        loc = e.headers.get("Location", "")
+        if e.code != 301 or not loc.startswith(f"https://{host}"):
+            problems.append(f"http://{host}/ → {e.code} {loc}")
+    except Exception as e:  # noqa: BLE001
+        problems.append(f"http://{host}/: {e}")
 print("\n".join(report))
 print("\nпроблем нет" if not problems else "\nПРОБЛЕМЫ:\n" + "\n".join(problems))

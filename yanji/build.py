@@ -428,6 +428,18 @@ def head(title: str, desc: str, base: str = "", sticky: bool = False,
 """
 
 
+# 637166–637167: перелинковка направлений — с каждого сайта Яньцзи
+# на сайт Хуньчуня того же города отправления
+OTHER_DEST = {"name": "Хуньчунь", "hosts": {"main": "hunchun-hunchun.ru",
+              "us": "ussuriysk.hunchun-hunchun.ru", "hb": "habarovsk.hunchun-hunchun.ru"}}
+
+
+def logo_text() -> str:
+    """637169: в шапке вместо «ДАЛЬТУР» — направление, чтобы сайт не путали
+    с сайтом фирмы со всеми турами. В подвале название фирмы остаётся."""
+    return f"Туры в {CITY['name']}"
+
+
 def header(base: str = "") -> str:
     wa_href = wa(f"Здравствуйте! Интересуют туры в {CITY['name']} из {CITY['from']}.")
     return f"""
@@ -446,7 +458,7 @@ def header(base: str = "") -> str:
       <svg width="22" height="16" viewBox="0 0 22 16" fill="none" aria-hidden="true"><path d="M0 1h22M0 8h22M0 15h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     </button>
 
-    <div class="header__center"><a class="logo" href="{site_url("main")}">ДАЛЬТУР</a></div>
+    <div class="header__center"><a class="logo" href="{site_url("main")}">{logo_text()}</a></div>
 
     <nav class="header__nav" aria-label="Основная навигация">
       <a href="{site_url("main", "#tury")}">Все туры</a>
@@ -475,7 +487,7 @@ def header(base: str = "") -> str:
   <button type="button" class="drawer__backdrop" data-drawer-close aria-label="Закрыть меню"></button>
   <nav class="drawer__panel" aria-label="Мобильное меню">
     <div class="drawer__top">
-      <span class="logo">ДАЛЬТУР</span>
+      <span class="logo">{logo_text()}</span>
       <button type="button" class="icon-btn" data-drawer-close aria-label="Закрыть меню">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M1 1l14 14M15 1L1 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       </button>
@@ -525,6 +537,12 @@ def footer(base: str = "", tail: str = "") -> str:
         <h3>ВЫЕЗДЫ В {CITY['name'].upper()}</h3>
         <ul>
 {departures_links}
+        </ul>
+      </div>
+      <div class="footer__col">
+        <h3>ЕЩЁ НАПРАВЛЕНИЯ</h3>
+        <ul>
+          <li><a href="https://{OTHER_DEST['hosts'].get(DEP, OTHER_DEST['hosts']['main'])}/">Туры в {OTHER_DEST['name']} из {DEPARTURES[DEP]['from']}</a></li>
         </ul>
       </div>
       <div class="footer__col">
@@ -1049,8 +1067,10 @@ def build_tour(d: int, n: int) -> str:
   </section>
 """
 
+    # 637170–637174: ссылки на туры другой длительности — сразу после
+    # последнего дня программы, «Тур в Хуньчунь 3 дня», по порядку
     others = "\n".join(
-        f'        <a class="pill" href="{tour_url(od)}">{label(od, on)}</a>'
+        f'          <a class="pill" href="{tour_url(od)}">Тур в {CITY["name"]} {od} {days_word(od)}</a>'
         for od, on in TOURS if od != d)
 
     return (head(
@@ -1105,6 +1125,12 @@ def build_tour(d: int, n: int) -> str:
       <div class="days">
 {chr(10).join(days)}
       </div>
+      <nav class="tour-other" aria-label="Туры на другое количество дней">
+        <h3 class="tour-other__title">Туры в {CITY['name']} на другое количество дней</h3>
+        <div class="pill-row">
+{others}
+        </div>
+      </nav>
     </div>
   </section>
 """
@@ -1128,14 +1154,6 @@ def build_tour(d: int, n: int) -> str:
                    "Подберём даты и посчитаем стоимость.",
                    wa_text)
         + outro_block + f"""
-  <section class="section" id="drugie">
-    <div class="wrap">
-      <div class="section__head"><h2>Туры в {CITY['name']} на</h2></div>
-      <div class="pill-row">
-{others}
-      </div>
-    </div>
-  </section>
 
 </main>
 """ + footer(tail=f"""
