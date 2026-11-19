@@ -570,7 +570,7 @@ def header(base: str = "") -> str:
 def footer(base: str = "", tail: str = "") -> str:
     # 634296: сайты городов отправления видны со всех сайтов — и людям, и поисковикам
     departures_links = "\n".join(
-        f'          <li><a href="https://{dep["host"]}/">Из {dep["from"]}</a></li>'
+        f'          <li><a href="https://{dep["host"]}/">{dep["from"]}</a></li>'
         for dep in DEPARTURES.values())
     tours_links = "\n".join(
         f'          <li><a href="{tour_url(d, base)}">{label(d, n)}</a></li>'
@@ -595,13 +595,13 @@ def footer(base: str = "", tail: str = "") -> str:
         </ul>
       </div>
       <div class="footer__col">
-        <h3>ВЫЕЗДЫ В {CITY['name'].upper()}</h3>
+        <h3>ТУРЫ В {CITY['name'].upper()} ИЗ</h3>
         <ul>
 {departures_links}
         </ul>
       </div>
       <div class="footer__col">
-        <h3>ЕЩЁ НАПРАВЛЕНИЯ</h3>
+        <h3>ТУРЫ В КИТАЙ</h3>
         <ul>
           <li><a href="https://{OTHER_DEST['hosts'].get(DEP, OTHER_DEST['hosts']['main'])}/">Туры в {OTHER_DEST['name']} из {DEPARTURES[DEP]['from']}</a></li>
         </ul>

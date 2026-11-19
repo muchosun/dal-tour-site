@@ -212,7 +212,17 @@ def tour_url(d: int, base: str = "") -> str:
 # экскурсии, еда, чайная церемония. Подписи — «тема — туры в Хуньчунь»,
 # так просил заказчик для поиска (633829), в том числе у стеклянного моста. Формат как у PAGES["videos"]:
 # (подпись, страница на Дзене, превью в assets/img, секунды, embed-id).
-TOUR_VIDEOS: list = []   # 637078: ролики заснят, выйдут в январе–феврале
+# 637238–637249 (19.11): первые четыре ролика, «эти пока поставим» — будут ещё.
+TOUR_VIDEOS = [
+    ("Гостиница: шведский стол и сауна — туры в Яньцзи",
+     "https://dzen.ru/video/watch/681033d4d5c1852da56442a0", "video-tour-1", 1552, "oy0bt9O0IAAA"),
+    ("Горячие источники Пияньшань — туры в Яньцзи",
+     "https://dzen.ru/video/watch/6810318881dcea6cabaec42a", "video-tour-2", 2018, "oy0Y09O0IAAA"),
+    ("Стеклянный мост — туры в Яньцзи",
+     "https://dzen.ru/video/watch/68102f027535b749adb6df14", "video-tour-3", 1631, "oy0aA8-0IAAA"),
+    ("Ночной рынок и уличная еда — туры в Яньцзи",
+     "https://dzen.ru/video/watch/680f9ee0ccf41d4c90a90aeb", "video-tour-4", 1478, "oy0Y7su0IAAA"),
+]
 
 
 # G1: дни подписываем словами — «люди не понимают один, два, три»
@@ -509,7 +519,7 @@ def header(base: str = "") -> str:
 def footer(base: str = "", tail: str = "") -> str:
     # 634296: сайты городов отправления видны со всех сайтов — и людям, и поисковикам
     departures_links = "\n".join(
-        f'          <li><a href="https://{dep["host"]}/">Из {dep["from"]}</a></li>'
+        f'          <li><a href="https://{dep["host"]}/">{dep["from"]}</a></li>'
         for dep in DEPARTURES.values())
     tours_links = "\n".join(
         f'          <li><a href="{tour_url(d, base)}">{label(d, n)}</a></li>'
@@ -534,13 +544,13 @@ def footer(base: str = "", tail: str = "") -> str:
         </ul>
       </div>
       <div class="footer__col">
-        <h3>ВЫЕЗДЫ В {CITY['name'].upper()}</h3>
+        <h3>ТУРЫ В {CITY['name'].upper()} ИЗ</h3>
         <ul>
 {departures_links}
         </ul>
       </div>
       <div class="footer__col">
-        <h3>ЕЩЁ НАПРАВЛЕНИЯ</h3>
+        <h3>ТУРЫ В КИТАЙ</h3>
         <ul>
           <li><a href="https://{OTHER_DEST['hosts'].get(DEP, OTHER_DEST['hosts']['main'])}/">Туры в {OTHER_DEST['name']} из {DEPARTURES[DEP]['from']}</a></li>
         </ul>
